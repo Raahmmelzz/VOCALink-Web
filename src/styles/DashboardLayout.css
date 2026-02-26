@@ -1,0 +1,142 @@
+    /* DashboardLayout.css */
+
+/* Layout & Main Area */
+.dashboard-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f6f8fb;
+  position: relative;
+}
+
+.dashboard-main {
+  flex: 1;
+  padding: 24px;
+  margin-left: 0;
+  transition: margin-left 0.3s ease-in-out;
+}
+
+.dashboard-main.sidebar-open {
+  margin-left: 250px;
+}
+
+/* Typography & Headings */
+.page-title {
+  color: #2aa7ff;
+  margin: 0 0 8px 0;
+  font-size: 24px;
+}
+
+.page-desc {
+  color: #64748b;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Manage Students Specifics */
+.manage-students-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.input-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.student-input {
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  flex: 1;
+  max-width: 300px;
+  font-size: 16px;
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: #2aa7ff;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #1c8ee0;
+}
+
+.btn-danger {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.btn-danger:hover {
+  background-color: #dc2626;
+}
+
+/* Roster List */
+.roster-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.roster-title {
+  color: #334155;
+  margin: 0;
+  font-size: 18px;
+}
+
+.badge {
+  background-color: #e2e8f0;
+  color: #475569;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.empty-state {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.student-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.student-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f8fafc;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.student-name {
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 500;
+}

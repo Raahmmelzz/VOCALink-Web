@@ -1,0 +1,17 @@
+/* Login.module.css */
+.polaroids {
+  display: flex;
+  gap: 10px;
+  /* ... your existing styles ... */
+}
+
+.brandTitle {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.formCard {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+}
