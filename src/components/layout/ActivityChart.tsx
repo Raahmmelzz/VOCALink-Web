@@ -1,6 +1,6 @@
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useActivityChart } from "../../hooks/useActivityChart";
 import DashboardCard from "../layout/DashboardCard";
-import { useActivityChart, type ChartView } from "../../hooks/useActivityChart";
 
 // Custom Tooltip stays as a helper component
 function CustomTooltip({ active, payload, label }: any) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import  { useBoardConfig, type Board } from '../../hooks/useBoardBoardConfig'; // Import your hook
+import { useBoardConfig } from '../../hooks/useBoardBoardConfig'; // Import your hook
 import "../../styles/DashboardComponent.css";
 import "../../styles/DashboardLayout.css";
 
