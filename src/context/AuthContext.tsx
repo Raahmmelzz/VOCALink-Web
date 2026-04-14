@@ -1,73 +1,68 @@
-import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
-import type { ReactNode } from "react";
-import authService from "../services/authService";
-import type { User, LoginPayload, SignupPayload } from "../types/auth";
+import { createContext, useContext, useState, type ReactNode } from 'react';
+import api from '../services/api';
 
+// Define the shape of our context
 interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-  login: (data: LoginPayload) => Promise<void>;
-  signup: (data: SignupPayload) => Promise<void>;
-  logout: () => void;
-  updateUser: (newData: Partial<User>) => void;
+    token: string | null;
+    login: (credentials: any) => Promise<void>;
+    signup: (credentials: any) => Promise<void>;
+    logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+    // Check if the user already logged in previously
+    const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
 
-  // Initialize Session
-  useEffect(() => {
-    const session = authService.getSession();
-    if (session) setUser(session);
-    setIsLoading(false);
-  }, []);
+    const signup = async ({ username, email, password }: any) => {
+        try {
+            // Sends the data to the Django RegisterView
+            await api.post('/users/', { username, email, password });
+        } catch (error: any) {
+            throw new Error(error.response?.data?.username?.[0] || "Registration failed. Username might be taken.");
+        }
+    };
 
-  // Use useCallback so these functions don't change on every render
-  const login = useCallback(async (data: LoginPayload) => {
-    const loggedUser = authService.login(data);
-    setUser(loggedUser);
-  }, []);
+    const login = async ({ identifier, password, remember }: any) => {
+        try {
+            // Django's default token auth requires 'username' and 'password'
+            const response = await api.post('/login/', { 
+                username: identifier, 
+                password: password 
+            });
+            
+            const fetchedToken = response.data.token;
+            setToken(fetchedToken);
+            
+            // Save token to browser storage
+            if (remember) {
+                localStorage.setItem('token', fetchedToken);
+            } else {
+                sessionStorage.setItem('token', fetchedToken);
+            }
+        } catch (error: any) {
+            throw new Error("Invalid username or password.");
+        }
+    };
 
-  const signup = useCallback(async (data: SignupPayload) => {
-    authService.signup(data);
-  }, []);
+    const logout = () => {
+        setToken(null);
+        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
+    };
 
-  const logout = useCallback(() => {
-    authService.logout();
-    setUser(null);
-  }, []);
+    return (
+        <AuthContext.Provider value={{ token, login, signup, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
+};
 
-  const updateUser = useCallback((newData: Partial<User>) => {
-    setUser((prev) => {
-      if (!prev) return null;
-      const updated = { ...prev, ...newData };
-      authService.saveSession(updated); // Sync with localStorage/Service
-      return updated;
-    });
-  }, []);
-
-  // useMemo ensures the 'value' object only changes when user or isLoading changes
-  const value = useMemo(() => ({
-    user,
-    isLoading,
-    login,
-    signup,
-    logout,
-    updateUser
-  }), [user, isLoading, login, signup, logout, updateUser]);
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
-  return ctx;
-} 
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error("useAuth must be used within an AuthProvider");
+    }
+    return context;
+};
