@@ -1,26 +1,20 @@
-// src/components/auth/ProtectedRoute.tsx
 import { Navigate } from "react-router-dom";
 import type { ReactNode } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext"; // Make sure this path is correct!
 
 type Props = {
   children: ReactNode;
 };
 
 export default function ProtectedRoute({ children }: Props) {
-  const { user, isLoading } = useAuth(); // Grab isLoading
+  // Grab the 'token' we created in AuthContext instead of 'user'
+  const { token } = useAuth(); 
 
-  // 1. Wait for the app to check LocalStorage
-  if (isLoading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <h3>Loading VocaLink...</h3>
-      </div>
-    );
+  // If there is no token in storage, kick them back to the login page
+  if (!token) {
+    return <Navigate to="/login" replace />;
   }
-
-  // 2. Now it's safe to check if we should redirect
-  if (!user) return <Navigate to="/login" replace />;
   
+  // If they have the token VIP pass, let them see the dashboard!
   return <>{children}</>;
 }

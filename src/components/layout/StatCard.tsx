@@ -1,6 +1,6 @@
 
 // Make sure this path points correctly to where your CSS file lives!
-import "../../styles/DashboardComponent.css"; 
+import "../../styles/DashboardComponent.css";
 
 interface StatCardProps {
   label: string;
