@@ -1,34 +1,28 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import AuthLayout from "../../components/layout/AuthLayout";
-import { useAuth } from "../../context/AuthContext";
 import AuthBranding from "../../components/layout/AuthBranding";
 import AuthFooter from "../../components/layout/AuthFooter";
+import { useSignup } from "../../hooks/useSignup"; // Importing from your new hooks folder
 
 export default function Signup() {
-  const navigate = useNavigate();
-  const { signup } = useAuth();
-
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPass, setShowPass] = useState(false);
-  const [error, setError] = useState("");
-
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    try {
-      await signup({ username, email, password });
-      navigate("/login");
-    } catch (err: any) {
-      setError(err?.message || "Signup failed.");
-    }
-  };
+  const {
+    username,
+    setUsername,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    showPass,
+    toggleShowPass,
+    error,
+    onSubmit,
+  } = useSignup();
 
   return (
     <AuthLayout
-      left={<AuthBranding description="Empowering people to connect with deaf and mute individuals through seamless communication." />}
+      left={
+        <AuthBranding description="Empowering people to connect with deaf and mute individuals through seamless communication." />
+      }
       right={
         <div className="form-card">
           <h2 className="form-title">Create Account</h2>
@@ -72,13 +66,15 @@ export default function Signup() {
               <button
                 type="button"
                 className="eye"
-                onClick={() => setShowPass((v) => !v)}
+                onClick={toggleShowPass}
               >
                 👁
               </button>
             </div>
 
-            <button className="primary-btn" type="submit">Sign Up</button>
+            <button className="primary-btn" type="submit">
+              Sign Up
+            </button>
 
             <p className="bottom-text">
               Already have an account? <Link to="/login">Sign In</Link>

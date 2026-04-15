@@ -2,6 +2,9 @@ export interface User {
   id: string;
   username: string;
   email: string;
+  organization?: string; // New
+  bio?: string;          // New
+  specializations?: string[]; // New
 }
 
 export interface LoginPayload {

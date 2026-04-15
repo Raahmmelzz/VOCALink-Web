@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import UserFooter from "./UserFooter";
 import "../../styles/DashboardComponent.css";
 
 interface DashboardSidebarProps {
@@ -8,8 +8,8 @@ interface DashboardSidebarProps {
 }
 
 export default function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
-  const { user, logout } = useAuth();
-
+  // We removed user and logout here because UserFooter handles them now
+  
   return (
     <>
       {isOpen && <div onClick={onClose} className="sidebar-overlay" />}
@@ -35,16 +35,8 @@ export default function DashboardSidebar({ isOpen, onClose }: DashboardSidebarPr
           Manage Boards
         </NavLink>
         
-        <div className="sidebar-footer">
-          <div className="user-info">
-            <span className="user-name">{user?.username || "Educator"}</span>
-            <span className="user-email">{user?.email || "user@vocalink.edu"}</span>
-          </div>
-
-          <button onClick={() => { onClose(); logout(); }} className="logout-btn">
-            Log Out
-          </button>
-        </div>
+        {/* This single component now handles the clickable name AND the logout button */}
+        <UserFooter onAction={onClose} />
       </nav>
     </>
   );

@@ -1,37 +1,28 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import AuthLayout from "../../components/layout/AuthLayout";
-import { useAuth } from "../../context/AuthContext";
 import AuthBranding from "../../components/layout/AuthBranding";
 import AuthFooter from "../../components/layout/AuthFooter";
+import { useLogin } from "../../hooks/useLogin"; // Import the custom hook
 
 export default function Login() {
-  const navigate = useNavigate();
-  const { login } = useAuth();
-
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
-  const [showPass, setShowPass] = useState(false);
-  const [error, setError] = useState("");
-
-  const onSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError("");
-    try {
-      await login({ identifier, password, remember });
-      navigate("/dashboard");
-    } catch (err: any) {
-      setError(err?.message || "Login failed.");
-    }
-  };
+  const {
+    identifier,
+    setIdentifier,
+    password,
+    setPassword,
+    remember,
+    setRemember,
+    showPass,
+    toggleShowPass,
+    error,
+    onSubmit,
+  } = useLogin();
 
   return (
-   <AuthLayout
-  left={<AuthBranding description="Empowering people to connect with deaf and mute individuals through seamless communication." 
-    />
-  }
+    <AuthLayout
+      left={
+        <AuthBranding description="Empowering people to connect with deaf and mute individuals through seamless communication." />
+      }
       right={
         <div className="form-card">
           <h2 className="form-title">Welcome Back</h2>
@@ -64,7 +55,7 @@ export default function Login() {
               <button
                 type="button"
                 className="eye"
-                onClick={() => setShowPass((v) => !v)}
+                onClick={toggleShowPass}
               >
                 👁
               </button>
@@ -79,7 +70,11 @@ export default function Login() {
                 />
                 <span>Remember me</span>
               </label>
-              <button type="button" className="link-btn" onClick={() => alert("Reset flow coming soon!")}>
+              <button 
+                type="button" 
+                className="link-btn" 
+                onClick={() => alert("Reset flow coming soon!")}
+              >
                 Forgot Password?
               </button>
             </div>

@@ -1,14 +1,9 @@
-import type {
-  User,
-  LoginPayload,
-  SignupPayload,
-} from "../types/auth";
+// src/services/authService.ts
+import type { User, LoginPayload, SignupPayload } from "../types/auth";
 
 const USERS = "vocalink_users";
 const SESSION = "vocalink_session";
 const REMEMBER = "vocalink_remember";
-
-
 
 interface StoredUser extends User {
   password: string;
@@ -32,6 +27,7 @@ const authService = {
       username,
       email,
       password,
+      specializations: [],
     };
 
     users.push(newUser);
@@ -52,6 +48,9 @@ const authService = {
       id: user.id,
       username: user.username,
       email: user.email,
+      organization: user.organization, // Add this
+      bio: user.bio,                   // Add this
+      specializations: user.specializations,
     };
 
     if (remember) {
@@ -78,6 +77,27 @@ const authService = {
     localStorage.removeItem(REMEMBER);
     sessionStorage.removeItem(SESSION);
   },
+
+  // FIXED: Moved inside the object and added "database" update logic
+  saveSession(updatedUser: User) {
+    // 1. Update the active session
+    const remember = localStorage.getItem(REMEMBER) === "1";
+    if (remember) {
+      localStorage.setItem(SESSION, JSON.stringify(updatedUser));
+    } else {
+      sessionStorage.setItem(SESSION, JSON.stringify(updatedUser));
+    }
+
+    // 2. Update the "Permanent" User List (the simulated database)
+    const users = getUsers();
+    const userIndex = users.findIndex(u => u.id === updatedUser.id);
+    
+    if (userIndex !== -1) {
+      // Merge updated fields while keeping the password intact
+      users[userIndex] = { ...users[userIndex], ...updatedUser };
+      saveUsers(users);
+    }
+  }
 };
 
 export default authService;

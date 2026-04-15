@@ -326,3 +326,81 @@ body{
   line-height: 1.5;
   width: 100%;
 }
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr; /* Sidebar-style profile info on left */
+  gap: 24px;
+  align-items: start;
+}
+
+.profile-avatar-section {
+  text-align: center;
+  width: 100%;
+  padding: 20px 0;
+}
+
+.profile-avatar-large {
+  width: 100px;
+  height: 100px;
+  background: #646cff;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 0 auto 15px;
+}
+
+.profile-role-tag {
+  background: #f1f5f9;
+  color: #64748b;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  display: inline-block;
+}
+
+.profile-stats {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 20px;
+  margin-top: 10px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #646cff;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  width: 100%;
+}
+
+.profile-textarea {
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  resize: none;
+  font-family: inherit;
+}

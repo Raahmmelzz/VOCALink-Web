@@ -1,24 +1,18 @@
-import { useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Legend,
-} from "recharts";
+import { Outlet } from "react-router-dom";
 import DashboardHeader from "../../components/layout/DashboardHeader";
 import DashboardFooter from "../../components/layout/DashboardFooter";
-import DashboardCard from "../../components/layout/DashboardCard";
 import DashboardSidebar from "../../components/layout/DashboardSidebar";
+import StatCard from "../../components/layout/StatCard";
+import ActivityChart from "../../components/layout/ActivityChart";
+import TopStudentsTable from "../../components/layout/TopStudentsTable";
+
+import { useDashboard } from "../../hooks/useDashboard";
+import { weeklyActivity, monthlyActivity, topStudents } from "../../data/mockData";
+
 import "../../styles/DashboardLayout.css";
 import "../../styles/DashboardComponent.css";
 
+<<<<<<< HEAD
 // --- Mock Data (replace with real API/context data) ---
 const weeklyActivity = [
   { day: "Mon", active: 12 },
@@ -99,34 +93,37 @@ function CustomTooltip({ active, payload, label }: any) {
   return null;
 }
 
+=======
+>>>>>>> ba43dde6fff195f4bfadb6ae7d856f6d692e4080
 export default function Dashboard() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [chartView, setChartView] = useState<"weekly" | "monthly">("weekly");
-  const location = useLocation();
-
-  const isOverview =
-    location.pathname === "/dashboard" || location.pathname === "/dashboard/";
+  const { isSidebarOpen, isOverview, openSidebar, closeSidebar } = useDashboard();
 
   return (
     <div className="dashboard-layout">
-      <DashboardHeader onOpenMenu={() => setIsSidebarOpen(true)} />
+      <DashboardHeader onOpenMenu={openSidebar} />
 
       <DashboardSidebar
         isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
+        onClose={closeSidebar}
       />
 
       <main className={`dashboard-main ${isSidebarOpen ? "sidebar-open" : ""}`}>
         {isOverview ? (
           <>
+<<<<<<< HEAD
             {/* Page Heading */}
             <div style={{ marginBottom: 20 }}>
               <h2 className="page-title">Student Activity</h2>
+=======
+            <div style={{ marginBottom: 20 }}>
+              <h2 className="page-title" style={{ marginBottom: 4 }}>Student Activity</h2>
+>>>>>>> ba43dde6fff195f4bfadb6ae7d856f6d692e4080
               <p className="page-desc">
                 Live usage stats from the VocalLink mobile app  track active students, sessions, and spoken words in real time.
               </p>
             </div>
 
+<<<<<<< HEAD
             {/* Stat Cards — each is a DashboardCard with an accent border */}
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 16 }}>
               <StatCard icon="👥" label="Total Students"      value={67}   sub="↑ 4 this month"     accentColor="#2aa7ff" />
@@ -295,6 +292,17 @@ export default function Dashboard() {
                 </div>
               </div>
             </DashboardCard>
+=======
+            <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 16 }}>
+              <StatCard icon="👥" label="Total Students" value={67} sub="↑ 4 this month" color="#2aa7ff" />
+              <StatCard icon="📱" label="Active on App Today" value={22} sub="↑ 3 vs yesterday" color="#22c55e" />
+              <StatCard icon="🗣️" label="Words Spoken Today" value={1900} sub="Avg 86/student" color="#f59e0b" />
+              <StatCard icon="🔥" label="Avg Daily Streak" value="4.2d" sub="↑ 0.5 vs last week" color="#2aa7ff" />
+            </div>
+
+            <ActivityChart weeklyData={weeklyActivity} monthlyData={monthlyActivity} />
+            <TopStudentsTable students={topStudents} />
+>>>>>>> ba43dde6fff195f4bfadb6ae7d856f6d692e4080
           </>
         ) : (
           <Outlet />

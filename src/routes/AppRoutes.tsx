@@ -5,8 +5,8 @@ import Dashboard from "../pages/dashboard/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import ManageStudents from "../pages/students/ManageStudents";
 import SpeechContexts from "../pages/tts/SpeechContexts";
-// 1. Add your import here
-import BoardConfig from "../components/layout/BoardConfig"; 
+import Profile from "../pages/profile/Profile";
+import BoardConfig from "../components/layout/BoardConfig";
 
 export default function AppRoutes() {
   return (
@@ -15,7 +15,6 @@ export default function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
-      {/* The Dashboard Parent Route */}
       <Route
         path="/dashboard"
         element={
@@ -26,9 +25,8 @@ export default function AppRoutes() {
       >
         <Route path="students" element={<ManageStudents />} />
         <Route path="tts" element={<SpeechContexts />} />
-        
-        {/* 2. Add the Board Management route here */}
         <Route path="boards" element={<BoardConfig />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />
