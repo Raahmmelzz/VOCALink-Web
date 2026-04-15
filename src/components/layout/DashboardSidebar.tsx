@@ -20,7 +20,7 @@ export default function DashboardSidebar({ isOpen, onClose }: DashboardSidebarPr
         <h3 className="sidebar-title">System Menu</h3>
         
         <NavLink end onClick={onClose} to="/dashboard" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-          Overview
+          Dashboard
         </NavLink>
         
         <NavLink onClick={onClose} to="/dashboard/students" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
