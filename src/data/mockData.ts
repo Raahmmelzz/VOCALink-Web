@@ -2,37 +2,37 @@ import { Colors as C } from "../styles/tokens";
 import type { Student, Messages, QuickReply, TranscriptLine } from "../types";
 
 export const STUDENTS: Student[] = [
-  { id: 1, name: "Juan Dela Cruz",  status: "online",  lastMsg: "I want water 💧",        time: "10:32", bg: C.tealLight,   color: C.teal,   unread: 0 },
-  { id: 2, name: "Pedro Santos",    status: "request", lastMsg: "I need help ✋",          time: "10:35", bg: C.amberLight,  color: C.amber,  unread: 2 },
-  { id: 3, name: "Maria Reyes",     status: "urgent",  lastMsg: "I feel sick 😔",         time: "10:38", bg: C.redLight,    color: C.red,    unread: 1 },
-  { id: 4, name: "Ana Garcia",      status: "idle",    lastMsg: "I don't understand ❓",  time: "10:20", bg: C.purpleLight, color: C.purple, unread: 0 },
-  { id: 5, name: "Carlos Mendoza",  status: "online",  lastMsg: "I am done 📖",           time: "10:15", bg: C.blueLight,   color: C.blue,   unread: 0 },
-  { id: 6, name: "Liza Ramos",      status: "online",  lastMsg: "Thank you 🙏",           time: "10:10", bg: C.tealLight,   color: C.teal,   unread: 0 },
+  { id: 1, name: "Rammel Chan",  status: "online",  lastMsg: "I want water ",        time: "10:32", bg: C.tealLight,   color: C.teal,   unread: 0 },
+  { id: 2, name: "Mark kun",    status: "request", lastMsg: "I need help ",          time: "10:35", bg: C.amberLight,  color: C.amber,  unread: 2 },
+  { id: 3, name: "Nick san",     status: "urgent",  lastMsg: "I feel sick ",         time: "10:38", bg: C.redLight,    color: C.red,    unread: 1 },
+  { id: 4, name: "Marco sama",      status: "idle",    lastMsg: "I don't understand ",  time: "10:20", bg: C.purpleLight, color: C.purple, unread: 0 },
+  { id: 5, name: "Carlos dono",  status: "online",  lastMsg: "I am done ",           time: "10:15", bg: C.blueLight,   color: C.blue,   unread: 0 },
+  { id: 6, name: "Steve chan",      status: "online",  lastMsg: "Thank you ",           time: "10:10", bg: C.tealLight,   color: C.teal,   unread: 0 },
 ];
 
 export const MESSAGES: Messages = {
   1: [
-    { from: "student", text: "I want water 💧",       time: "10:32" },
+    { from: "student", text: "I want water ",       time: "10:32" },
     { from: "teacher", text: "OK — I'll get some.",   time: "10:33" },
-    { from: "student", text: "Thank you 🙏",           time: "10:34" },
+    { from: "student", text: "Thank you ",           time: "10:34" },
   ],
   2: [
-    { from: "student", text: "I need help ✋",         time: "10:35" },
-    { from: "student", text: "I don't understand ❓", time: "10:36" },
+    { from: "student", text: "I need help ",         time: "10:35" },
+    { from: "student", text: "I don't understand ", time: "10:36" },
   ],
   3: [
-    { from: "student", text: "I feel sick 😔",        time: "10:38" },
+    { from: "student", text: "I feel sick ",        time: "10:38" },
   ],
   4: [
-    { from: "student", text: "I don't understand ❓", time: "10:20" },
+    { from: "student", text: "I don't understand ", time: "10:20" },
     { from: "teacher", text: "Wait — I'll explain again.", time: "10:21" },
   ],
   5: [
-    { from: "student", text: "I am done 📖",          time: "10:15" },
-    { from: "teacher", text: "Good job! ✓",           time: "10:16" },
+    { from: "student", text: "I am done ",          time: "10:15" },
+    { from: "teacher", text: "Good job! ",           time: "10:16" },
   ],
   6: [
-    { from: "student", text: "Thank you 🙏",           time: "10:10" },
+    { from: "student", text: "Thank you ",           time: "10:10" },
     { from: "teacher", text: "You're doing great!",   time: "10:11" },
   ],
 };
@@ -54,10 +54,10 @@ export const CC_LOG: TranscriptLine[] = [
   { time: "10:05", speaker: "Teacher",        text: "Good morning everyone. Let us start our lesson for today.", isCC: true  },
   { time: "10:08", speaker: "Teacher",        text: "Please open your Science book to page 12.",                 isCC: true  },
   { time: "10:12", speaker: "Teacher",        text: "Today we will discuss the parts of a plant.",              isCC: true  },
-  { time: "10:15", speaker: "Student",        text: "Juan sent: I want water 💧",                               isCC: false },
+  { time: "10:15", speaker: "Student",        text: "Juan sent: I want water ",                               isCC: false },
   { time: "10:16", speaker: "Teacher (reply)",text: "OK — I'll get some.",                                      isCC: false },
   { time: "10:20", speaker: "Teacher",        text: "Listen carefully. I will explain the root system.",        isCC: true  },
-  { time: "10:25", speaker: "Student",        text: "Pedro sent: I need help ✋",                               isCC: false },
+  { time: "10:25", speaker: "Student",        text: "Pedro sent: I need help ",                               isCC: false },
   { time: "10:26", speaker: "Teacher (reply)",text: "Wait — I'll come to you shortly.",                         isCC: false },
 ];
 
