@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
+<<<<<<< HEAD
 import api from '../services/api';
 
 // Define the shape of our context
@@ -7,11 +8,23 @@ interface AuthContextType {
     login: (credentials: any) => Promise<void>;
     signup: (credentials: any) => Promise<void>;
     logout: () => void;
+=======
+import authService from '../services/authService';
+import type { User } from '../types/auth';
+
+interface AuthContextType {
+  user: User | null;
+  token: string | null;
+  login: (credentials: any) => Promise<void>;
+  signup: (credentials: any) => Promise<void>;
+  logout: () => void;
+>>>>>>> 50a0724 (with login)
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+<<<<<<< HEAD
     // Check if the user already logged in previously
     const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
 
@@ -66,3 +79,41 @@ export const useAuth = () => {
     }
     return context;
 };
+=======
+  const [user, setUser] = useState<User | null>(() => authService.getSession());
+  // token mirrors user presence so ProtectedRoute still works
+  const [token, setToken] = useState<string | null>(() =>
+    authService.getSession() ? 'local-session' : null
+  );
+
+  const signup = async ({ fullName, email, password }: any) => {
+    // derive a username from the full name
+    const username = fullName.trim().toLowerCase().replace(/\s+/g, '_');
+    authService.signup({ username, email, password });
+  };
+
+  const login = async ({ identifier, password, remember }: any) => {
+    const session = authService.login({ identifier, password, remember });
+    setUser(session);
+    setToken('local-session');
+  };
+
+  const logout = () => {
+    authService.logout();
+    setUser(null);
+    setToken(null);
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, token, login, signup, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
+  return context;
+};
+>>>>>>> 50a0724 (with login)
