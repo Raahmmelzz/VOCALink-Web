@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-  import AppRoutes from "./routes/AppRoutes";
-
-  export default function App() {
-    return <AppRoutes />;
-  } 
-=======
 import React, { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import "./styles/global.css";
@@ -72,4 +65,3 @@ const App: React.FC = () => {
 };
 
 export default App;
->>>>>>> 50a0724 (with login)

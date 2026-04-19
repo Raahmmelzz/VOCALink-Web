@@ -2,24 +2,6 @@ import { Link } from "react-router-dom";
 import AuthLayout from "../../components/layout/AuthLayout";
 import AuthBranding from "../../components/layout/AuthBranding";
 import AuthFooter from "../../components/layout/AuthFooter";
-<<<<<<< HEAD
-import { useSignup } from "../../hooks/useSignup"; // Importing from your new hooks folder
-
-export default function Signup() {
-  const {
-    username,
-    setUsername,
-    email,
-    setEmail,
-    password,
-    setPassword,
-    showPass,
-    toggleShowPass,
-    error,
-    onSubmit,
-  } = useSignup();
-
-=======
 import { useSignup } from "../../hooks/useSignup";
 
 export default function Signup() {
@@ -46,7 +28,6 @@ export default function Signup() {
     </svg>
   );
 
->>>>>>> 50a0724 (with login)
   return (
     <AuthLayout
       left={
@@ -55,24 +36,11 @@ export default function Signup() {
       right={
         <div className="form-card">
           <h2 className="form-title">Create Account</h2>
-<<<<<<< HEAD
-          <p className="form-desc">Sign up to access your dashboard</p>
-=======
           <p className="form-desc">Sign up to get started with VocaLink</p>
->>>>>>> 50a0724 (with login)
 
           {error && <div className="alert">{error}</div>}
 
           <form onSubmit={onSubmit} className="form">
-<<<<<<< HEAD
-            <label className="label">Username</label>
-            <input
-              className="input"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
-              autoComplete="username"
-=======
             <label className="label">Full Name</label>
             <input
               className="input"
@@ -80,7 +48,6 @@ export default function Signup() {
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Enter your full name"
               autoComplete="name"
->>>>>>> 50a0724 (with login)
               required
             />
 
@@ -95,35 +62,13 @@ export default function Signup() {
               required
             />
 
-<<<<<<< HEAD
-            <label className="label">Password</label>
-=======
             <label className="label">Set Password</label>
->>>>>>> 50a0724 (with login)
             <div className="input-wrap">
               <input
                 className="input"
                 type={showPass ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-<<<<<<< HEAD
-                placeholder="Create a password"
-                autoComplete="new-password"
-                required
-              />
-              <button
-                type="button"
-                className="eye"
-                onClick={toggleShowPass}
-              >
-                👁
-              </button>
-            </div>
-
-            <button className="primary-btn" type="submit">
-              Sign Up
-            </button>
-=======
                 placeholder="Create a password (min. 6 characters)"
                 autoComplete="new-password"
                 required
@@ -150,7 +95,6 @@ export default function Signup() {
             </div>
 
             <button className="primary-btn" type="submit">Sign Up</button>
->>>>>>> 50a0724 (with login)
 
             <p className="bottom-text">
               Already have an account? <Link to="/login">Sign In</Link>
@@ -162,8 +106,4 @@ export default function Signup() {
       }
     />
   );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 50a0724 (with login)
