@@ -7,10 +7,11 @@ import type { NavPage } from "../../types";
 
 const PAGE_TITLES: Record<NavPage, string> = {
   dashboard: "Dashboard",
-  students:  "Students",
+  students: "Students",
   broadcast: "STT Broadcast",
-  messages:  "Messages",
-  livecc:    "Live CC Log",
+  messages: "Messages",
+  livecc: "Live CC Log",
+  settings: ""
 };
 
 interface TopbarProps {
