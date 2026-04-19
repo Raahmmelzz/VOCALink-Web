@@ -8,10 +8,17 @@ export const useLogin = () => {
   const { login } = useAuth();
 
   const [identifier, setIdentifier] = useState("");
+<<<<<<< HEAD
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState("");
+=======
+  const [password, setPassword]     = useState("");
+  const [remember, setRemember]     = useState(false);
+  const [showPass, setShowPass]     = useState(false);
+  const [error, setError]           = useState("");
+>>>>>>> 50a0724 (with login)
 
   const toggleShowPass = () => setShowPass((v) => !v);
 
@@ -26,6 +33,7 @@ export const useLogin = () => {
     }
   };
 
+<<<<<<< HEAD
   return {
     identifier,
     setIdentifier,
@@ -39,3 +47,7 @@ export const useLogin = () => {
     onSubmit,
   };
 };
+=======
+  return { identifier, setIdentifier, password, setPassword, remember, setRemember, showPass, toggleShowPass, error, onSubmit };
+};
+>>>>>>> 50a0724 (with login)
