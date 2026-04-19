@@ -1,7 +1,8 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Colors as C, FontSize, Radius } from "../styles/tokens";
 import { Card, CardTitle, Button, Divider } from "../components/ui";
 import Icon from "../components/ui/Icon";
+import api from "../services/api"; // Added the API import
 
 const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: C.text3, margin: "18px 0 8px" }}>
@@ -68,25 +69,57 @@ interface SettingsProps {
 const Settings: React.FC<SettingsProps> = ({ teacherName, teacherPhoto, onNameChange, onPhotoChange }) => {
   const [tab,   setTab]   = useState<Tab>("profile");
   const [toast, setToast] = useState(false);
+  const [loading, setLoading] = useState(true); // Added loading state
 
-  const [firstName,   setFirstName]   = useState(() => teacherName.replace(/^(Mr\.|Mrs\.|Ms\.|Dr\.)\s*/i, "").split(" ")[0] ?? "");
-  const [lastName,    setLastName]    = useState(() => teacherName.replace(/^(Mr\.|Mrs\.|Ms\.|Dr\.)\s*/i, "").split(" ").slice(1).join(" ") ?? "");
-  const [displayName, setDisplayName] = useState(teacherName);
-  const [email,       setEmail]       = useState("t.reyes@mabinies.edu.ph");
-  const [phone,       setPhone]       = useState("+63 917 123 4567");
-  const [room,        setRoom]        = useState("Room 204");
-  const [department,  setDepartment]  = useState("SNED");
-  const [grade,       setGrade]       = useState("Grade 5");
-  const [school,      setSchool]      = useState("Mabini Elementary School");
-  const [bio,         setBio]         = useState("SNED teacher specializing in AAC strategies for non-verbal students. 5 years in inclusive education.");
+  // Initialized with empty strings to prevent flashing old mock data
+  const [firstName,   setFirstName]   = useState("");
+  const [lastName,    setLastName]    = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [email,       setEmail]       = useState("");
+  const [phone,       setPhone]       = useState("");
+  const [room,        setRoom]        = useState("");
+  const [department,  setDepartment]  = useState("");
+  const [grade,       setGrade]       = useState("");
+  const [school,      setSchool]      = useState("");
+  const [bio,         setBio]         = useState("");
 
-  // "Saved" snapshot — only updates on Save, drives the photo card display
-  const [savedDisplayName, setSavedDisplayName] = useState(teacherName);
-  const [savedRoom,        setSavedRoom]        = useState("Room 204");
-  const [savedDepartment,  setSavedDepartment]  = useState("SNED"); // ← fix
+  const [savedDisplayName, setSavedDisplayName] = useState("");
+  const [savedRoom,        setSavedRoom]        = useState("");
+  const [savedDepartment,  setSavedDepartment]  = useState(""); 
 
   const [pendingPhoto, setPendingPhoto] = useState<string | null>(teacherPhoto);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // FETCH DATA ON MOUNT
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await api.get('users/me/');
+        const data = response.data;
+        
+        setFirstName(data.first_name || "");
+        setLastName(data.last_name || "");
+        setDisplayName(data.display_name || "");
+        setEmail(data.email || "");
+        setPhone(data.contact_number || "");
+        setRoom(data.room_section || "");
+        setDepartment(data.department || "");
+        setGrade(data.grade_handled || "");
+        setSchool(data.organization || "");
+        setBio(data.bio || "");
+
+        setSavedDisplayName(data.display_name || "");
+        setSavedRoom(data.room_section || "");
+        setSavedDepartment(data.department || "");
+      } catch (error) {
+        console.error("Failed to load profile", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProfile();
+  }, []);
 
   const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -108,19 +141,44 @@ const Settings: React.FC<SettingsProps> = ({ teacherName, teacherPhoto, onNameCh
   const toggleNotif = (key: keyof typeof notifs) =>
     setNotifs(prev => ({ ...prev, [key]: !prev[key] }));
 
-  // Only on Save: push name, initials, and photo up to App → Sidebar
-  const showToast = () => {
-    const initials = (firstName[0] ?? "").toUpperCase() + (lastName[0] ?? "").toUpperCase();
-    onNameChange(displayName, initials || "TR");
-    onPhotoChange(pendingPhoto);
-    setSavedDisplayName(displayName);
-    setSavedRoom(room);
-    setSavedDepartment(department); // ← fix
-    setToast(true);
-    setTimeout(() => setToast(false), 2200);
+  // ASYNC SAVE FUNCTION
+  const showToast = async () => {
+    try {
+      const payload = {
+        first_name: firstName,
+        last_name: lastName,
+        display_name: displayName,
+        email: email,
+        contact_number: phone,
+        room_section: room,
+        department: department,
+        grade_handled: grade,
+        organization: school,
+        bio: bio
+      };
+
+      await api.patch('users/me/', payload);
+
+      const initials = (firstName[0] ?? "").toUpperCase() + (lastName[0] ?? "").toUpperCase();
+      onNameChange(displayName, initials || "TR");
+      onPhotoChange(pendingPhoto);
+      setSavedDisplayName(displayName);
+      setSavedRoom(room);
+      setSavedDepartment(department); 
+      setToast(true);
+      setTimeout(() => setToast(false), 2200);
+    } catch (error) {
+      console.error("Error saving profile", error);
+      alert("Failed to save changes.");
+    }
   };
 
   const initials = (firstName[0] ?? "").toUpperCase() + (lastName[0] ?? "").toUpperCase();
+
+  // PREVENT RENDERING UNTIL DATA IS LOADED
+  if (loading) {
+    return <div style={{ padding: 20, color: C.text3, fontSize: FontSize.sm }}>Loading profile...</div>;
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -160,7 +218,6 @@ const Settings: React.FC<SettingsProps> = ({ teacherName, teacherPhoto, onNameCh
 
               <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhoto} />
 
-              {/* Use savedDisplayName & savedRoom — only updates on Save */}
               <div style={{ fontSize: FontSize.sm, fontWeight: 500, color: C.text, textAlign: "center" }}>{savedDisplayName}</div>
               <div style={{ fontSize: 11, color: C.text3, textAlign: "center" }}>SNED Teacher · {savedRoom}</div>
 
@@ -182,7 +239,7 @@ const Settings: React.FC<SettingsProps> = ({ teacherName, teacherPhoto, onNameCh
 
             {[
               { label: "Employee ID",  value: "TCH-2019-044" },
-              { label: "Department",   value: savedDepartment }, // ← fix
+              { label: "Department",   value: savedDepartment }, 
               { label: "Member since", value: "June 2019" },
               { label: "Last login",   value: "Today, 7:48 AM" },
             ].map(row => (
