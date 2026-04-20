@@ -1,6 +1,6 @@
 import React from "react";
 import { Colors as C, FontSize, Radius } from "../../styles/tokens";
-import { Avatar, Badge, Divider } from "../ui";
+import { Badge, Divider } from "../ui";
 import Icon from "../ui/Icon";
 import type { NavPage } from "../../types";
 
@@ -22,9 +22,15 @@ const NAV_ITEMS: NavItem[] = [
 interface SidebarProps {
   active: NavPage;
   setActive: (page: NavPage) => void;
+  teacherName: string;
+  teacherInitials: string;
+  teacherPhoto: string | null;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ active, setActive }) => {
+const Sidebar: React.FC<SidebarProps> = ({
+  active, setActive,
+  teacherName, teacherInitials, teacherPhoto,
+}) => {
   return (
     <aside style={{
       width: 220, background: C.white,
@@ -102,30 +108,59 @@ const Sidebar: React.FC<SidebarProps> = ({ active, setActive }) => {
       <div style={{ padding: "12px 10px" }}>
         <Divider style={{ margin: "0 0 10px" }} />
 
-        {([
-          { label: "Settings", icon: "settings" as const },
-          { label: "Sign out",  icon: "logout"   as const },
-        ]).map(item => (
-          <div
-            key={item.label}
-            style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "7px 10px", borderRadius: Radius.md,
-              cursor: "pointer", fontSize: FontSize.base, color: C.text2,
-            }}
-            onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = C.gray}
-            onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = "transparent"}
-          >
-            <Icon name={item.icon} size={15} color={C.text3} />
-            <span>{item.label}</span>
-          </div>
-        ))}
+        {/* Settings */}
+        <div
+          onClick={() => setActive("settings")}
+          style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "7px 10px", borderRadius: Radius.md,
+            cursor: "pointer", fontSize: FontSize.base,
+            background: active === "settings" ? C.tealLight : "transparent",
+            color:      active === "settings" ? C.teal      : C.text2,
+            fontWeight: active === "settings" ? 500          : 400,
+            transition: "background 0.1s",
+          }}
+          onMouseEnter={e => { if (active !== "settings") (e.currentTarget as HTMLDivElement).style.background = C.gray; }}
+          onMouseLeave={e => { if (active !== "settings") (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
+        >
+          <Icon name="settings" size={15} color={active === "settings" ? C.teal : C.text3} />
+          <span>Settings</span>
+        </div>
+
+        {/* Sign out */}
+        <div
+          style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "7px 10px", borderRadius: Radius.md,
+            cursor: "pointer", fontSize: FontSize.base, color: C.text2,
+            transition: "background 0.1s",
+          }}
+          onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = C.gray}
+          onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = "transparent"}
+        >
+          <Icon name="logout" size={15} color={C.text3} />
+          <span>Sign out</span>
+        </div>
 
         <Divider />
+
+        {/* Teacher info — synced from Settings */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 6px" }}>
-          <Avatar name="Teacher R" size={28} />
+          {/* Avatar: show photo if uploaded, else initials */}
+          <div style={{
+            width: 28, height: 28, borderRadius: "50%",
+            background: teacherPhoto ? "transparent" : C.tealLight,
+            border: `1.5px solid ${C.teal}`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0, overflow: "hidden",
+          }}>
+            {teacherPhoto
+              ? <img src={teacherPhoto} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              : <span style={{ fontSize: 10, fontWeight: 600, color: C.teal }}>{teacherInitials}</span>
+            }
+          </div>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 500, color: C.text }}>Mrs. Reyes</div>
+            <div style={{ fontSize: 12, fontWeight: 500, color: C.text }}>{teacherName}</div>
             <div style={{ fontSize: 10, color: C.text3 }}>SNED Teacher</div>
           </div>
         </div>

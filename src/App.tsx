@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import "./styles/global.css";
@@ -16,6 +17,7 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import { STUDENTS } from "./data/mockData";
 import type { NavPage } from "./types";
 import type { Student } from "./types";
+
 
 const MainApp: React.FC = () => {
   const [active, setActive] = useState<NavPage>("dashboard");
@@ -65,3 +67,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+

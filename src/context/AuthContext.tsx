@@ -22,21 +22,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     token ? { identifier: 'Teacher' } as any : null 
   );
 
-  const signup = async ({ fullName, email, password }: any) => {
-    // We will wire this to Django later! 
-    console.log("Signup triggered for:", fullName);
-  };
-
-  const login = async ({ identifier, password, remember }: any) => {
+  const signup = async ({ fullName, email, password, status }: any) => {
     try {
-      // 3. Send the real request to Django
-      const response = await fetch('http://127.0.0.1:8000/api/auth/login/', {
+      // Auto-generate a unique username for Django
+      const generatedUsername = email.split('@')[0] + Math.floor(Math.random() * 10000);
+
+      const response = await fetch('http://localhost:8000/api/auth/register/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          username: identifier, // Django expects 'username' even if we type an email!
+          username: generatedUsername,
+          email: email,
+          full_name: fullName,
+          status: status || "TEACHER", // Defaults to TEACHER for web signups
+          password: password,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Django rejected signup:", errorData);
+        throw new Error('Failed to create account. Email might already exist.');
+      }
+
+      console.log("User successfully saved to Django DB!");
+    } catch (error) {
+      console.error("Signup failed:", error);
+      throw error;
+    }
+  };
+
+  const login = async ({ identifier, password, remember }: any) => {
+    try {
+  
+      const response = await fetch('http://localhost:8000/api/auth/login/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          identifier: identifier, // Changed this to identifier!
           password: password,
         }),
       });
@@ -47,7 +74,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const data = await response.json();
 
-      // 4. Save the real tokens from Django
+      // 2. The React Bouncer!
+      if (data.status !== 'TEACHER') {
+        throw new Error('Access Denied: This web portal is for Teachers only. Please use the mobile app.');
+      }
+
+      // 3. Save the real tokens from Django
       if (remember) {
         localStorage.setItem('access_token', data.access);
         localStorage.setItem('refresh_token', data.refresh);
@@ -55,18 +87,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         sessionStorage.setItem('access_token', data.access);
       }
 
-      // 5. Update React State
+      // 4. Update state
       setToken(data.access);
       setUser({ identifier } as any); 
 
     } catch (error) {
       console.error("Login failed:", error);
-      throw error;
+      throw error; // Passes the error to the UI
     }
   };
 
   const logout = () => {
-    // 6. Clear everything when logging out
+    // Clear everything when logging out
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     sessionStorage.removeItem('access_token');

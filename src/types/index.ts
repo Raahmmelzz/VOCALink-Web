@@ -30,7 +30,8 @@ export type NavPage =
   | "students"
   | "broadcast"
   | "messages"
-  | "livecc";
+  | "livecc"
+  | "settings";   // ← added
 
 export interface TranscriptLine {
   time: string;
