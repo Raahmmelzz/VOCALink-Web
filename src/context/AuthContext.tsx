@@ -22,11 +22,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     token ? { identifier: 'Teacher' } as any : null 
   );
 
-  const signup = async ({ fullName, email, password, status }: any) => {
+  const signup = async (credentials: any) => {
     try {
-      // Auto-generate a unique username for Django
-      const generatedUsername = email.split('@')[0] + Math.floor(Math.random() * 10000);
+      // 1. Generate a safe username for Django
+      const generatedUsername = credentials.email.split('@')[0] + Math.floor(Math.random() * 10000);
 
+      // 2. Send the request to Django
       const response = await fetch('http://localhost:8000/api/auth/register/', {
         method: 'POST',
         headers: {
@@ -34,10 +35,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
         body: JSON.stringify({
           username: generatedUsername,
-          email: email,
-          full_name: fullName,
-          status: status || "TEACHER", // Defaults to TEACHER for web signups
-          password: password,
+          email: credentials.email,
+          full_name: credentials.profile.name, // Extracts the name from the profile object
+          status: credentials.userType === 'teacher' ? 'TEACHER' : 'STUDENT',
+          password: credentials.password,
         }),
       });
 
@@ -47,7 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error('Failed to create account. Email might already exist.');
       }
 
-      console.log("User successfully saved to Django DB!");
+      console.log("User & Profile successfully saved to Django DB!");
     } catch (error) {
       console.error("Signup failed:", error);
       throw error;

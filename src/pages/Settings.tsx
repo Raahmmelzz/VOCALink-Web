@@ -148,9 +148,8 @@ const Settings: React.FC<SettingsProps> = ({ teacherName, teacherPhoto, onNameCh
         first_name: firstName,
         last_name: lastName,
         display_name: displayName,
-        email: email,
-        contact_number: phone,
-        room_section: room,
+        contact_number: phone, // Matches Serializer
+        room_section: room,    // Matches Serializer
         department: department,
         grade_handled: grade,
         organization: school,
@@ -159,12 +158,19 @@ const Settings: React.FC<SettingsProps> = ({ teacherName, teacherPhoto, onNameCh
 
       await api.patch('users/me/', payload);
 
-      const initials = (firstName[0] ?? "").toUpperCase() + (lastName[0] ?? "").toUpperCase();
+      // Helper to safely get initials for the profile circle
+      const fChar = firstName.trim().charAt(0).toUpperCase();
+      const lChar = lastName.trim().charAt(0).toUpperCase();
+      const initials = fChar + lChar;
+      
       onNameChange(displayName, initials || "TR");
       onPhotoChange(pendingPhoto);
+      
+      // Update the "Saved" labels in the sidebar
       setSavedDisplayName(displayName);
       setSavedRoom(room);
       setSavedDepartment(department); 
+      
       setToast(true);
       setTimeout(() => setToast(false), 2200);
     } catch (error) {

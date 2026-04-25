@@ -85,6 +85,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActive, setSelectedStudent }) 
               { label: "Start STT Broadcast", page: "broadcast" as NavPage, dot: C.teal   },
               { label: "View all messages",   page: "messages"  as NavPage, dot: C.purple },
               { label: "Live CC log",         page: "livecc"    as NavPage, dot: C.blue   },
+              
             ]).map((a, i) => (
               <Button
                 key={i}
