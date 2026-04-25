@@ -66,12 +66,13 @@ interface SettingsProps {
   onPhotoChange: (url: string | null) => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ teacherName, teacherPhoto, onNameChange, onPhotoChange }) => {
+const Settings: React.FC<SettingsProps> = ({ teacherPhoto, onNameChange, onPhotoChange }) => {
   const [tab,   setTab]   = useState<Tab>("profile");
   const [toast, setToast] = useState(false);
   const [loading, setLoading] = useState(true); // Added loading state
 
   // Initialized with empty strings to prevent flashing old mock data
+  const [username,    setUsername]    = useState("");
   const [firstName,   setFirstName]   = useState("");
   const [lastName,    setLastName]    = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -96,7 +97,7 @@ const Settings: React.FC<SettingsProps> = ({ teacherName, teacherPhoto, onNameCh
       try {
         const response = await api.get('users/me/');
         const data = response.data;
-        
+        setUsername(data.username || "");
         setFirstName(data.first_name || "");
         setLastName(data.last_name || "");
         setDisplayName(data.display_name || "");
@@ -111,6 +112,14 @@ const Settings: React.FC<SettingsProps> = ({ teacherName, teacherPhoto, onNameCh
         setSavedDisplayName(data.display_name || "");
         setSavedRoom(data.room_section || "");
         setSavedDepartment(data.department || "");
+        
+        // This will display something like: "Teresa @treyes843"
+        const sidebarName = data.display_name || (data.username ? `@${data.username}` : "Teacher");
+        const initials = data.display_name 
+            ? data.display_name.substring(0, 2).toUpperCase() 
+            : (data.username ? data.username.substring(0, 2).toUpperCase() : "");
+        
+        onNameChange(sidebarName, initials);
       } catch (error) {
         console.error("Failed to load profile", error);
       } finally {
@@ -145,6 +154,8 @@ const Settings: React.FC<SettingsProps> = ({ teacherName, teacherPhoto, onNameCh
   const showToast = async () => {
     try {
       const payload = {
+        username: username,     // <--- ADD THIS
+        email: email,
         first_name: firstName,
         last_name: lastName,
         display_name: displayName,
@@ -160,9 +171,18 @@ const Settings: React.FC<SettingsProps> = ({ teacherName, teacherPhoto, onNameCh
 
       // Helper to safely get initials for the profile circle
       const fChar = firstName.trim().charAt(0).toUpperCase();
-      const lChar = lastName.trim().charAt(0).toUpperCase();
-      const initials = fChar + lChar;
+      const initials = fChar || "T";
       
+      // Update sidebar instantly with First Name + @Username
+      // 💥 Instantly update sidebar using the new rule
+      const sidebarName = displayName || `@${username}`;
+      const calculatedInitials = displayName 
+          ? displayName.substring(0, 2).toUpperCase() 
+          : (username ? username.substring(0, 2).toUpperCase() : "T");
+          
+      onNameChange(sidebarName, initials);
+      
+      // Update the "Saved" labels
       onNameChange(displayName, initials || "TR");
       onPhotoChange(pendingPhoto);
       

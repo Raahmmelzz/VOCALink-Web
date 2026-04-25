@@ -6,7 +6,7 @@ import { useSignup } from "../../hooks/useSignup";
 
 export default function Signup() {
   const {
-    fullName, setFullName,
+    username, setUsername, // Changed from fullName
     email, setEmail,
     password, setPassword,
     confirmPassword, setConfirmPassword,
@@ -41,13 +41,14 @@ export default function Signup() {
           {error && <div className="alert">{error}</div>}
 
           <form onSubmit={onSubmit} className="form">
-            <label className="label">Full Name</label>
+  
+            <label className="label">Username</label>
             <input
               className="input"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Enter your full name"
-              autoComplete="name"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Choose a username (no spaces)"
+              autoComplete="username"
               required
             />
 

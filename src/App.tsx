@@ -24,8 +24,8 @@ const DashboardLayout: React.FC = () => {
   const [active, setActive] = useState<NavPage>("dashboard");
   const [selectedStudent, setSelectedStudent] = useState<Student>(STUDENTS[0]);
 
-  const [teacherName,    setTeacherName]    = useState("Mrs. Teresa Reyes");
-  const [teacherInitials,setTeacherInitials]= useState("TR");
+  const [teacherName,    setTeacherName]    = useState("Loading...");
+  const [teacherInitials,setTeacherInitials]= useState("");
   const [teacherPhoto,   setTeacherPhoto]   = useState<string | null>(null);
 
   const renderPage = () => {

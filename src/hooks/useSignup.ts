@@ -6,7 +6,8 @@ export const useSignup = () => {
   const navigate = useNavigate();
   const { signup } = useAuth();
 
-  const [fullName, setFullName] = useState("");
+  // Changed fullName to username
+  const [username, setUsername] = useState(""); 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -28,9 +29,8 @@ export const useSignup = () => {
     }
 
     try {
-      // We removed the status state, and just hardcode it here!
       await signup({ 
-        fullName,
+        username, // Now correctly pointing to the state above
         email, 
         password,
         status: "TEACHER" 
@@ -43,7 +43,7 @@ export const useSignup = () => {
   };
 
   return { 
-    fullName, setFullName, 
+    username, setUsername, // Changed fullName to username here too
     email, setEmail, 
     password, setPassword, 
     confirmPassword, setConfirmPassword, 

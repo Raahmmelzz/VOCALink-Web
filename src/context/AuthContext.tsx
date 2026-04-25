@@ -24,21 +24,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signup = async (credentials: any) => {
     try {
-      // 1. Generate a safe username for Django
-      const generatedUsername = credentials.email.split('@')[0] + Math.floor(Math.random() * 10000);
-
-      // 2. Send the request to Django
+      // 1. Send the request to Django (No more random username generator!)
       const response = await fetch('http://localhost:8000/api/auth/register/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          username: generatedUsername,
+          username: credentials.username, // <--- Now it uses the username they actually typed!
           email: credentials.email,
-          full_name: credentials.fullname, // Extracts the name from the profile object
           status: credentials.status,
           password: credentials.password,
+          // 💥 full_name has been completely deleted from here!
         }),
       });
 

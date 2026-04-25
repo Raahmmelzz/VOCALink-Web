@@ -9,11 +9,10 @@ const api = axios.create({
 
 // UPDATED: Now perfectly matches your AuthContext and Django's JWT rules
 api.interceptors.request.use((config) => {
-    // 1. Look for 'access_token' instead of 'token'
-    const token = localStorage.getItem('access_token'); 
+    // UPDATED: Now it checks both Local (Remember Me) and Session (Normal Login)
+    const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
     
     if (token && config.headers) {
-        // 2. Use 'Bearer' instead of 'Token'
         config.headers.Authorization = `Bearer ${token}`; 
     }
     return config;
