@@ -3,6 +3,8 @@ import { Colors as C, FontSize, Radius } from "../../styles/tokens";
 import { Badge, Divider } from "../ui";
 import Icon from "../ui/Icon";
 import type { NavPage } from "../../types";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface NavItem {
   id: NavPage;
@@ -27,10 +29,18 @@ interface SidebarProps {
   teacherPhoto: string | null;
 }
 
+
 const Sidebar: React.FC<SidebarProps> = ({
   active, setActive,
   teacherName, teacherInitials, teacherPhoto,
 }) => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();             // 1. Clears the tokens
+    navigate("/login");   // 2. Redirects to the login screen
+  };
   return (
     <aside style={{
       width: 220, background: C.white,
@@ -129,7 +139,9 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Sign out */}
         <div
+        onClick={handleLogout}
           style={{
+        
             display: "flex", alignItems: "center", gap: 10,
             padding: "7px 10px", borderRadius: Radius.md,
             cursor: "pointer", fontSize: FontSize.base, color: C.text2,

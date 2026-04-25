@@ -36,8 +36,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         body: JSON.stringify({
           username: generatedUsername,
           email: credentials.email,
-          full_name: credentials.profile.name, // Extracts the name from the profile object
-          status: credentials.userType === 'teacher' ? 'TEACHER' : 'STUDENT',
+          full_name: credentials.fullname, // Extracts the name from the profile object
+          status: credentials.status,
           password: credentials.password,
         }),
       });

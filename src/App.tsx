@@ -1,27 +1,29 @@
-
 import React, { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import "./styles/global.css";
 import "./styles/auth.css";
 import { Colors as C } from "./styles/tokens";
+
 import Sidebar   from "./components/layout/Sidebar";
 import Topbar    from "./components/layout/Topbar";
 import Dashboard from "./pages/Dashboard";
-import Students from "./pages/Students";
+import Students  from "./pages/Students";
 import Broadcast from "./pages/Broadcast";
 import Messages  from "./pages/Messages";
 import LiveCC    from "./pages/LiveCC";
 import Settings  from "./pages/Settings";
+import Login     from "./pages/auth/Login";  // Make sure this path is correct!
+import Signup    from "./pages/auth/Signup"; // Make sure this path is correct!
+
 import { STUDENTS } from "./data/mockData";
-import type { NavPage } from "./types";
-import type { Student } from "./types";
+import { useAuth } from "./context/AuthContext";
+import type { NavPage, Student } from "./types";
 
-
-const App: React.FC = () => {
+// 1. We move your entire dashboard UI into a sub-component
+const DashboardLayout: React.FC = () => {
   const [active, setActive] = useState<NavPage>("dashboard");
   const [selectedStudent, setSelectedStudent] = useState<Student>(STUDENTS[0]);
 
-  // ── Teacher profile state lifted here so Sidebar stays in sync ──
   const [teacherName,    setTeacherName]    = useState("Mrs. Teresa Reyes");
   const [teacherInitials,setTeacherInitials]= useState("TR");
   const [teacherPhoto,   setTeacherPhoto]   = useState<string | null>(null);
@@ -61,6 +63,26 @@ const App: React.FC = () => {
         </main>
       </div>
     </div>
+  );
+};
+
+
+// 2. This is the new Traffic Cop that protects the app!
+const App: React.FC = () => {
+  const { user } = useAuth(); // Check if the user is logged in
+
+  return (
+    <Routes>
+      {/* If they are logged in, don't let them see the login page, push them to dashboard */}
+      <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
+      <Route path="/signup" element={!user ? <Signup /> : <Navigate to="/dashboard" />} />
+      
+      {/* If they are NOT logged in, don't let them see the dashboard, push them to login */}
+      <Route path="/dashboard/*" element={user ? <DashboardLayout /> : <Navigate to="/login" />} />
+      
+      {/* Catch-all: Route anything else based on auth status */}
+      <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
+    </Routes>
   );
 };
 
