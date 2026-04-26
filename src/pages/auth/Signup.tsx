@@ -2,21 +2,31 @@ import { Link } from "react-router-dom";
 import AuthLayout from "../../components/layout/AuthLayout";
 import AuthBranding from "../../components/layout/AuthBranding";
 import AuthFooter from "../../components/layout/AuthFooter";
-import { useSignup } from "../../hooks/useSignup"; // Importing from your new hooks folder
+import { useSignup } from "../../hooks/useSignup";
 
 export default function Signup() {
   const {
-    username,
-    setUsername,
-    email,
-    setEmail,
-    password,
-    setPassword,
-    showPass,
-    toggleShowPass,
-    error,
-    onSubmit,
+    username, setUsername, // Changed from fullName
+    email, setEmail,
+    password, setPassword,
+    confirmPassword, setConfirmPassword,
+    showPass, toggleShowPass,
+    showConfirm, toggleShowConfirm,
+    error, onSubmit,
   } = useSignup();
+
+  const EyeIcon = ({ open }: { open: boolean }) => open ? (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  ) : (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  );
 
   return (
     <AuthLayout
@@ -26,17 +36,18 @@ export default function Signup() {
       right={
         <div className="form-card">
           <h2 className="form-title">Create Account</h2>
-          <p className="form-desc">Sign up to access your dashboard</p>
+          <p className="form-desc">Sign up to get started with VocaLink</p>
 
           {error && <div className="alert">{error}</div>}
 
           <form onSubmit={onSubmit} className="form">
+  
             <label className="label">Username</label>
             <input
               className="input"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
+              placeholder="Choose a username (no spaces)"
               autoComplete="username"
               required
             />
@@ -52,29 +63,39 @@ export default function Signup() {
               required
             />
 
-            <label className="label">Password</label>
+            <label className="label">Set Password</label>
             <div className="input-wrap">
               <input
                 className="input"
                 type={showPass ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Create a password"
+                placeholder="Create a password (min. 6 characters)"
                 autoComplete="new-password"
                 required
               />
-              <button
-                type="button"
-                className="eye"
-                onClick={toggleShowPass}
-              >
-                👁
+              <button type="button" className="eye" onClick={toggleShowPass} aria-label="Toggle password">
+                <EyeIcon open={showPass} />
               </button>
             </div>
 
-            <button className="primary-btn" type="submit">
-              Sign Up
-            </button>
+            <label className="label">Confirm Password</label>
+            <div className="input-wrap">
+              <input
+                className="input"
+                type={showConfirm ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter your password"
+                autoComplete="new-password"
+                required
+              />
+              <button type="button" className="eye" onClick={toggleShowConfirm} aria-label="Toggle confirm password">
+                <EyeIcon open={showConfirm} />
+              </button>
+            </div>
+
+            <button className="primary-btn" type="submit">Sign Up</button>
 
             <p className="bottom-text">
               Already have an account? <Link to="/login">Sign In</Link>
