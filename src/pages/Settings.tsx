@@ -153,22 +153,28 @@ const Settings: React.FC<SettingsProps> = ({ teacherPhoto, onNameChange, onPhoto
   // ASYNC SAVE FUNCTION
   const showToast = async () => {
     try {
-      const payload = {
-        username: username,     // <--- ADD THIS
+      // 1. We name the first batch of data "rawPayload"
+      const rawPayload = {
+        username: username,
         email: email,
         first_name: firstName,
         last_name: lastName,
         display_name: displayName,
-        contact_number: phone, // Matches Serializer
-        room_section: room,    // Matches Serializer
+        contact_number: phone,
+        room_section: room,
         department: department,
         grade_handled: grade,
         organization: school,
         bio: bio
       };
 
-      await api.patch('users/me/', payload);
+      // 2. We filter out the empty strings and save it as the final "payload"
+      const payload = Object.fromEntries(
+        Object.entries(rawPayload).filter(([_, v]) => v !== "")
+      );
 
+      // 3. We send the cleaned payload to the server
+      await api.patch('users/me/', payload);
       // Helper to safely get initials for the profile circle
       const fChar = firstName.trim().charAt(0).toUpperCase();
       const initials = fChar || "T";
@@ -285,7 +291,10 @@ const Settings: React.FC<SettingsProps> = ({ teacherPhoto, onNameChange, onPhoto
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div><FieldLabel>First name</FieldLabel><TextInput value={firstName} onChange={e => setFirstName(e.target.value)} /></div>
               <div><FieldLabel>Last name</FieldLabel><TextInput value={lastName} onChange={e => setLastName(e.target.value)} /></div>
-              <div style={{ gridColumn: "1 / -1" }}><FieldLabel>Display name</FieldLabel><TextInput value={displayName} onChange={e => setDisplayName(e.target.value)} /></div>
+              <div style={{ gridColumn: "1 / -1" }}>
+              <FieldLabel>Username (Display Name)</FieldLabel>
+              <TextInput value={username} onChange={e => setUsername(e.target.value)} />
+            </div>
               <div style={{ gridColumn: "1 / -1" }}><FieldLabel>Email address</FieldLabel><TextInput type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
               <div><FieldLabel>Contact number</FieldLabel><TextInput type="tel" value={phone} onChange={e => setPhone(e.target.value)} /></div>
               <div><FieldLabel>Room / Section</FieldLabel><TextInput value={room} onChange={e => setRoom(e.target.value)} /></div>
