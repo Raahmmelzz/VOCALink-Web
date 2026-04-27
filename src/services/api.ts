@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://127.0.0.1:8000/api/',
+    // 💥 UPDATED: Pointing to your live Render FastAPI backend!
+    baseURL: 'https://vocalink-fastapi.onrender.com/api/',
     headers: {
         'Content-Type': 'application/json',
     },
