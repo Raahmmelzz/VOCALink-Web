@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Colors as C, FontSize, Radius } from "../../styles/tokens";
 import { Badge, Divider } from "../ui";
 import Icon from "../ui/Icon";
 import type { NavPage } from "../../types";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import api from "../../services/api"; // 1. Added API import
 
 interface NavItem {
   id: NavPage;
@@ -29,7 +30,6 @@ interface SidebarProps {
   teacherPhoto: string | null;
 }
 
-
 const Sidebar: React.FC<SidebarProps> = ({
   active, setActive,
   teacherName, teacherInitials, teacherPhoto,
@@ -37,10 +37,36 @@ const Sidebar: React.FC<SidebarProps> = ({
   const { logout } = useAuth();
   const navigate = useNavigate();
 
+  // 2. Local state to catch the username immediately on load
+  const [localName, setLocalName] = useState("");
+  const [localInitials, setLocalInitials] = useState("");
+
+  // 3. Fetch user data instantly when the sidebar appears
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await api.get('users/me/');
+        const defaultName = res.data.display_name || res.data.username || "User";
+        setLocalName(defaultName);
+        setLocalInitials(defaultName.substring(0, 2).toUpperCase());
+      } catch (error) {
+        console.error("Sidebar failed to fetch user:", error);
+      }
+    };
+    fetchUser();
+  }, []);
+
   const handleLogout = () => {
     logout();             // 1. Clears the tokens
     navigate("/login");   // 2. Redirects to the login screen
   };
+
+  // 4. Logic: If parent passes a real name (like after a Settings save), use it. 
+  // Otherwise, use our instantly fetched name so it never says "Loading..."
+  const isPropReal = teacherName && !teacherName.toLowerCase().includes("loading");
+  const displayName = isPropReal ? teacherName : (localName || "Loading...");
+  const displayInitials = isPropReal ? teacherInitials : (localInitials || "...");
+
   return (
     <aside style={{
       width: 220, background: C.white,
@@ -140,7 +166,6 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div
         onClick={handleLogout}
           style={{
-        
             display: "flex", alignItems: "center", gap: 10,
             padding: "7px 10px", borderRadius: Radius.md,
             cursor: "pointer", fontSize: FontSize.base, color: C.text2,
@@ -155,7 +180,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         <Divider />
 
-        {/* Teacher info — synced from Settings */}
+        {/* Teacher info — Dynamically Synced */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 6px" }}>
           {/* Avatar: show photo if uploaded, else initials */}
           <div style={{
@@ -167,11 +192,11 @@ const Sidebar: React.FC<SidebarProps> = ({
           }}>
             {teacherPhoto
               ? <img src={teacherPhoto} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              : <span style={{ fontSize: 10, fontWeight: 600, color: C.teal }}>{teacherInitials}</span>
+              : <span style={{ fontSize: 10, fontWeight: 600, color: C.teal }}>{displayInitials}</span>
             }
           </div>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 500, color: C.text }}>{teacherName}</div>
+            <div style={{ fontSize: 12, fontWeight: 500, color: C.text }}>{displayName}</div>
             <div style={{ fontSize: 10, color: C.text3 }}>SNED Teacher</div>
           </div>
         </div>

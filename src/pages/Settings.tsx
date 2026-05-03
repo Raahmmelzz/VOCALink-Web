@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Colors as C, FontSize, Radius } from "../styles/tokens";
 import { Card, CardTitle, Button, Divider } from "../components/ui";
 import Icon from "../components/ui/Icon";
-import api from "../services/api"; // Added the API import
+import api from "../services/api";
 
 const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: C.text3, margin: "18px 0 8px" }}>
@@ -69,9 +69,8 @@ interface SettingsProps {
 const Settings: React.FC<SettingsProps> = ({ teacherPhoto, onNameChange, onPhotoChange }) => {
   const [tab,   setTab]   = useState<Tab>("profile");
   const [toast, setToast] = useState(false);
-  const [loading, setLoading] = useState(true); // Added loading state
+  const [loading, setLoading] = useState(true);
 
-  // Initialized with empty strings to prevent flashing old mock data
   const [username,    setUsername]    = useState("");
   const [firstName,   setFirstName]   = useState("");
   const [lastName,    setLastName]    = useState("");
@@ -97,10 +96,16 @@ const Settings: React.FC<SettingsProps> = ({ teacherPhoto, onNameChange, onPhoto
       try {
         const response = await api.get('users/me/');
         const data = response.data;
+        
         setUsername(data.username || "");
         setFirstName(data.first_name || "");
         setLastName(data.last_name || "");
-        setDisplayName(data.display_name || "");
+        
+        // Fallback to username if display name is empty
+        const defaultName = data.display_name || data.username || "User";
+        setDisplayName(defaultName);
+        setSavedDisplayName(defaultName);
+        
         setEmail(data.email || "");
         setPhone(data.contact_number || "");
         setRoom(data.room_section || "");
@@ -109,15 +114,11 @@ const Settings: React.FC<SettingsProps> = ({ teacherPhoto, onNameChange, onPhoto
         setSchool(data.organization || "");
         setBio(data.bio || "");
 
-        setSavedDisplayName(data.display_name || "");
         setSavedRoom(data.room_section || "");
         setSavedDepartment(data.department || "");
         
-        // This will display something like: "Teresa @treyes843"
-        const sidebarName = data.display_name || (data.username ? `@${data.username}` : "Teacher");
-        const initials = data.display_name 
-            ? data.display_name.substring(0, 2).toUpperCase() 
-            : (data.username ? data.username.substring(0, 2).toUpperCase() : "");
+        const sidebarName = defaultName;
+        const initials = defaultName.substring(0, 2).toUpperCase();
         
         onNameChange(sidebarName, initials);
       } catch (error) {
@@ -147,6 +148,7 @@ const Settings: React.FC<SettingsProps> = ({ teacherPhoto, onNameChange, onPhoto
     broadcastReminder: true, sessionSummary: false,
     inApp: true, emailAlerts: true, smsAlerts: false, soundAlerts: true,
   });
+  
   const toggleNotif = (key: keyof typeof notifs) =>
     setNotifs(prev => ({ ...prev, [key]: !prev[key] }));
 
@@ -154,13 +156,13 @@ const Settings: React.FC<SettingsProps> = ({ teacherPhoto, onNameChange, onPhoto
   const showToast = async () => {
     try {
       const payload = {
-        username: username,     // <--- ADD THIS
+        username: username,
         email: email,
         first_name: firstName,
         last_name: lastName,
         display_name: displayName,
-        contact_number: phone, // Matches Serializer
-        room_section: room,    // Matches Serializer
+        contact_number: phone, 
+        room_section: room,    
         department: department,
         grade_handled: grade,
         organization: school,
@@ -169,25 +171,15 @@ const Settings: React.FC<SettingsProps> = ({ teacherPhoto, onNameChange, onPhoto
 
       await api.patch('users/me/', payload);
 
-      // Helper to safely get initials for the profile circle
-      const fChar = firstName.trim().charAt(0).toUpperCase();
-      const initials = fChar || "T";
-      
-      // Update sidebar instantly with First Name + @Username
-      // 💥 Instantly update sidebar using the new rule
-      const sidebarName = displayName || `@${username}`;
-      const calculatedInitials = displayName 
-          ? displayName.substring(0, 2).toUpperCase() 
-          : (username ? username.substring(0, 2).toUpperCase() : "T");
+      // Instantly update sidebar using the strict Display Name -> Username rule
+      const newSidebarName = displayName || username || "User";
+      const newInitials = newSidebarName.substring(0, 2).toUpperCase();
           
-      onNameChange(sidebarName, initials);
-      
-      // Update the "Saved" labels
-      onNameChange(displayName, initials || "TR");
+      onNameChange(newSidebarName, newInitials);
       onPhotoChange(pendingPhoto);
       
-      // Update the "Saved" labels in the sidebar
-      setSavedDisplayName(displayName);
+      // Update the "Saved" labels
+      setSavedDisplayName(newSidebarName);
       setSavedRoom(room);
       setSavedDepartment(department); 
       
