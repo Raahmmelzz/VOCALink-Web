@@ -12,36 +12,32 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  // 1. Check if the user already logged in previously
   const [token, setToken] = useState<string | null>(() => 
     localStorage.getItem('access_token') || sessionStorage.getItem('access_token')
   );
   
-  // 2. If we have a token, we pretend the user is logged in for now
   const [user, setUser] = useState<User | null>(
     token ? { identifier: 'Teacher' } as any : null 
   );
 
   const signup = async (credentials: any) => {
     try {
-      // 1. Send the request to Django (No more random username generator!)
       const response = await fetch('https://vocalink-fastapi.onrender.com/api/auth/register/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          username: credentials.username, // <--- Now it uses the username they actually typed!
+          username: credentials.username,
           email: credentials.email,
           status: credentials.status,
           password: credentials.password,
-          // 💥 full_name has been completely deleted from here!
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Django rejected signup:", errorData);
+        console.error("Signup rejected:", errorData);
         throw new Error('Failed to create account. Email might already exist.');
       }
 
@@ -54,14 +50,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async ({ identifier, password, remember }: any) => {
     try {
-  
       const response = await fetch('https://vocalink-fastapi.onrender.com/api/auth/login/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          identifier: identifier, // Changed this to identifier!
+          identifier: identifier,
           password: password,
         }),
       });
@@ -72,33 +67,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const data = await response.json();
 
-      // 2. The React Bouncer!
       if (data.status !== 'TEACHER') {
         throw new Error('Access Denied: This web portal is for Teachers only. Please use the mobile app.');
       }
 
-      // 3. Save the real tokens from Django
       if (remember) {
-        localStorage.setItem('access_token', data.access);
-        localStorage.setItem('refresh_token', data.refresh);
+        localStorage.setItem('access_token', data.access_token);
       } else {
-        sessionStorage.setItem('access_token', data.access);
+        sessionStorage.setItem('access_token', data.access_token);
       }
 
-      // 4. Update state
-      setToken(data.access);
-      setUser({ identifier } as any); 
+      setToken(data.access_token);
+      setUser({ identifier } as any);
 
     } catch (error) {
       console.error("Login failed:", error);
-      throw error; // Passes the error to the UI
+      throw error;
     }
   };
 
   const logout = () => {
-    // Clear everything when logging out
     localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
     sessionStorage.removeItem('access_token');
     setUser(null);
     setToken(null);
