@@ -1,8 +1,15 @@
 import React, { useState } from "react";
 import "./styles/global.css";
 import { Colors as C } from "./styles/tokens";
+<<<<<<< Updated upstream
 import Sidebar from "./components/layout/Sidebar";
 import Topbar  from "./components/layout/Topbar";
+=======
+
+import Sidebar     from "./components/layout/Sidebar";
+import Topbar      from "./components/layout/Topbar";
+import AuthFooter  from "./components/layout/AuthFooter";
+>>>>>>> Stashed changes
 import Dashboard from "./pages/Dashboard";
 import Students  from "./pages/Students";
 import Broadcast from "./pages/Broadcast";
@@ -34,6 +41,7 @@ const App: React.FC = () => {
         <Topbar page={active} />
         <main style={{ flex: 1, overflowY: "auto", padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
           {renderPage()}
+          <AuthFooter />
         </main>
       </div>
     </div>

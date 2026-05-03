@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import AuthLayout from "../../components/layout/AuthLayout";
 import AuthBranding from "../../components/layout/AuthBranding";
+<<<<<<< Updated upstream
 import AuthFooter from "../../components/layout/AuthFooter";
 import { useLogin } from "../../hooks/useLogin"; // Import the custom hook
 
@@ -16,12 +17,23 @@ export default function Login() {
     toggleShowPass,
     error,
     onSubmit,
+=======
+import { useLogin } from "../../hooks/useLogin";
+
+export default function Login() {
+  const {
+    identifier, setIdentifier,
+    password, setPassword,
+    remember, setRemember,
+    showPass, toggleShowPass,
+    error, loading, onSubmit,
+>>>>>>> Stashed changes
   } = useLogin();
 
   return (
     <AuthLayout
       left={
-        <AuthBranding description="Empowering people to connect with deaf and mute individuals through seamless communication." />
+        <AuthBranding description="Empowering teachers to support nonverbal students through seamless communication." />
       }
       right={
         <div className="form-card">
@@ -79,13 +91,24 @@ export default function Login() {
               </button>
             </div>
 
+<<<<<<< Updated upstream
             <button className="primary-btn" type="submit">Sign In</button>
+=======
+            <button className="primary-btn" type="submit" disabled={loading}>
+              {loading ? (
+                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: "spin 0.7s linear infinite" }}>
+                    <path d="M12 2a10 10 0 0 1 10 10" />
+                  </svg>
+                  Logging in…
+                </span>
+              ) : "Login"}
+            </button>
+>>>>>>> Stashed changes
 
             <p className="bottom-text">
               Don&apos;t have an account? <Link to="/signup">Sign Up</Link>
             </p>
-
-            <AuthFooter />
           </form>
         </div>
       }

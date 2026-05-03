@@ -1,8 +1,12 @@
 import { Link } from "react-router-dom";
 import AuthLayout from "../../components/layout/AuthLayout";
 import AuthBranding from "../../components/layout/AuthBranding";
+<<<<<<< Updated upstream
 import AuthFooter from "../../components/layout/AuthFooter";
 import { useSignup } from "../../hooks/useSignup"; // Importing from your new hooks folder
+=======
+import { useSignup } from "../../hooks/useSignup";
+>>>>>>> Stashed changes
 
 export default function Signup() {
   const {
@@ -21,7 +25,7 @@ export default function Signup() {
   return (
     <AuthLayout
       left={
-        <AuthBranding description="Empowering people to connect with deaf and mute individuals through seamless communication." />
+        <AuthBranding description="Empowering teachers to support nonverbal students through seamless communication." />
       }
       right={
         <div className="form-card">
@@ -79,8 +83,6 @@ export default function Signup() {
             <p className="bottom-text">
               Already have an account? <Link to="/login">Sign In</Link>
             </p>
-
-            <AuthFooter />
           </form>
         </div>
       }

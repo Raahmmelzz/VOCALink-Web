@@ -40,11 +40,10 @@ const Sidebar: React.FC<SidebarProps> = ({ active, setActive }) => {
           background: C.tealLight, display: "flex",
           alignItems: "center", justifyContent: "center", flexShrink: 0,
         }}>
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <rect x="4" y="2" width="5" height="9" rx="2.5" fill={C.teal}/>
-            <path d="M2 9a7 7 0 0 0 14 0" stroke={C.teal} strokeWidth="1.4" strokeLinecap="round"/>
-            <line x1="9" y1="16" x2="9" y2="12" stroke={C.teal} strokeWidth="1.4" strokeLinecap="round"/>
-            <line x1="6.5" y1="16" x2="11.5" y2="16" stroke={C.teal} strokeWidth="1.4" strokeLinecap="round"/>
+          <svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="3" fill={C.teal} />
+            <circle cx="12" cy="12" r="7" fill="none" stroke={C.teal} strokeWidth="2" />
+            <circle cx="12" cy="12" r="10" fill="none" stroke={C.teal} strokeWidth="1.5" opacity="0.5" />
           </svg>
         </div>
         <span style={{ fontSize: 16, fontWeight: 600, color: C.text, letterSpacing: "-0.3px" }}>
