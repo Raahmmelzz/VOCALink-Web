@@ -1,9 +1,9 @@
 export const Colors = {
-  // Brand - Blue (Teacher primary)
+  // Brand - Blue (matches login page)
   teal:        "#1AADDC",
-  tealMid:     "#0E96C5",
-  tealLight:   "#E0F7FC",
-  tealBorder:  "#7DD4EC",
+  tealMid:     "#0DD0F5",
+  tealLight:   "#E4F6FC",
+  tealBorder:  "#93D9EE",
 
   // Brand - Purple (Student primary)
   purple:      "#534AB7",

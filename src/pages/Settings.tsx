@@ -153,34 +153,37 @@ const Settings: React.FC<SettingsProps> = ({ teacherPhoto, onNameChange, onPhoto
   // ASYNC SAVE FUNCTION
   const showToast = async () => {
     try {
-      // 1. We name the first batch of data "rawPayload"
-      const rawPayload = {
-        username: username,
+      const payload = {
+        username: username,     // <--- ADD THIS
         email: email,
         first_name: firstName,
         last_name: lastName,
         display_name: displayName,
-        contact_number: phone,
-        room_section: room,
+        contact_number: phone, // Matches Serializer
+        room_section: room,    // Matches Serializer
         department: department,
         grade_handled: grade,
         organization: school,
         bio: bio
       };
 
-      // 2. We filter out the empty strings and save it as the final "payload"
-      const payload = Object.fromEntries(
-        Object.entries(rawPayload).filter(([_, v]) => v !== "")
-      );
-
-      // 3. We send the cleaned payload to the server
       await api.patch('users/me/', payload);
-      const sidebarName = displayName || `@${username}`;
-      const calculatedInitials = displayName
-          ? displayName.substring(0, 2).toUpperCase()
-          : (username ? username.substring(0, 2).toUpperCase() : "T");
 
-      onNameChange(sidebarName, calculatedInitials);
+      // Helper to safely get initials for the profile circle
+      const fChar = firstName.trim().charAt(0).toUpperCase();
+      const initials = fChar || "T";
+      
+      // Update sidebar instantly with First Name + @Username
+      // 💥 Instantly update sidebar using the new rule
+      const sidebarName = displayName || `@${username}`;
+      const calculatedInitials = displayName 
+          ? displayName.substring(0, 2).toUpperCase() 
+          : (username ? username.substring(0, 2).toUpperCase() : "T");
+          
+      onNameChange(sidebarName, initials);
+      
+      // Update the "Saved" labels
+      onNameChange(displayName, initials || "TR");
       onPhotoChange(pendingPhoto);
       
       // Update the "Saved" labels in the sidebar
@@ -209,7 +212,7 @@ const Settings: React.FC<SettingsProps> = ({ teacherPhoto, onNameChange, onPhoto
       {/* Tab bar */}
       <div style={{ display: "flex", gap: 2, background: "#ECEAE5", borderRadius: Radius.md, padding: 3, width: "fit-content" }}>
         {TABS.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{ fontSize: FontSize.sm, padding: "6px 18px", borderRadius: Radius.sm, border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: tab === t.id ? 500 : 400, background: tab === t.id ? C.white : "transparent", color: tab === t.id ? C.text : C.text3, boxShadow: tab === t.id ? `0 0 0 0.5px #DDD` : "none", transition: "all 0.15s" }}>
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ fontSize: FontSize.sm, padding: "6px 18px", borderRadius: (Radius as any).sm ?? 6, border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: tab === t.id ? 500 : 400, background: tab === t.id ? C.white : "transparent", color: tab === t.id ? C.text : C.text3, boxShadow: tab === t.id ? `0 0 0 0.5px #DDD` : "none", transition: "all 0.15s" }}>
             {t.label}
           </button>
         ))}
@@ -282,10 +285,7 @@ const Settings: React.FC<SettingsProps> = ({ teacherPhoto, onNameChange, onPhoto
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div><FieldLabel>First name</FieldLabel><TextInput value={firstName} onChange={e => setFirstName(e.target.value)} /></div>
               <div><FieldLabel>Last name</FieldLabel><TextInput value={lastName} onChange={e => setLastName(e.target.value)} /></div>
-              <div style={{ gridColumn: "1 / -1" }}>
-              <FieldLabel>Username (Display Name)</FieldLabel>
-              <TextInput value={username} onChange={e => setUsername(e.target.value)} />
-            </div>
+              <div style={{ gridColumn: "1 / -1" }}><FieldLabel>Display name</FieldLabel><TextInput value={displayName} onChange={e => setDisplayName(e.target.value)} /></div>
               <div style={{ gridColumn: "1 / -1" }}><FieldLabel>Email address</FieldLabel><TextInput type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
               <div><FieldLabel>Contact number</FieldLabel><TextInput type="tel" value={phone} onChange={e => setPhone(e.target.value)} /></div>
               <div><FieldLabel>Room / Section</FieldLabel><TextInput value={room} onChange={e => setRoom(e.target.value)} /></div>

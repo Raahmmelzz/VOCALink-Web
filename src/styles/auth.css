@@ -1,6 +1,6 @@
 :root{
-  --blue1:#1AADDC;
-  --blue2:#0DD0F5;
+  --blue1:#2aa7ff;
+  --blue2:#00e1ff;
   --text:#0f172a;
   --muted:#64748b;
   --bg:#f6f8fb;
@@ -254,8 +254,8 @@ body{
   color:white;
   font-weight:700;
   font-size:16px;
-  background: linear-gradient(135deg, #1AADDC, #0DD0F5);
-  box-shadow: 0 12px 28px rgba(26,173,220,.30);
+  background: linear-gradient(135deg, #2f80ff, #00e1ff);
+  box-shadow: 0 12px 28px rgba(47,128,255,.25);
 }
 .primary-btn:hover{
   opacity:.9;
@@ -403,11 +403,7 @@ body{
   border-radius: 6px;
   resize: none;
   font-family: inherit;
-<<<<<<< Updated upstream
 }
-=======
-}
-
 /* Success alert */
 .alert-success {
   background: #f0fdf4;
@@ -421,13 +417,3 @@ body{
 /* Eye button icon colour */
 .eye { color: #64748b; }
 .eye:hover { color: #0f172a; }
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.primary-btn:disabled {
-  opacity: 0.75;
-  cursor: not-allowed;
-}
->>>>>>> Stashed changes
