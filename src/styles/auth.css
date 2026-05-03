@@ -403,9 +403,6 @@ body{
   border-radius: 6px;
   resize: none;
   font-family: inherit;
-<<<<<<< HEAD
-}
-=======
 }
 /* Success alert */
 .alert-success {
@@ -420,4 +417,3 @@ body{
 /* Eye button icon colour */
 .eye { color: #64748b; }
 .eye:hover { color: #0f172a; }
->>>>>>> 50a0724 (with login)

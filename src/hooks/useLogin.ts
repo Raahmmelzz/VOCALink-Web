@@ -12,13 +12,14 @@ export const useLogin = () => {
   
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const toggleShowPass = () => setShowPass((v) => !v);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError(""); // Clear old errors when they try again
-    
+    setError("");
+    setLoading(true);
     try {
       // 1. Send the data to your AuthContext
       await login({ identifier, password, remember });
@@ -27,8 +28,9 @@ export const useLogin = () => {
       navigate("/dashboard");
       
     } catch (err: any) {
-      // 3. If the Bouncer blocks them (e.g., they are a Student), display the rejection message
       setError(err?.message || "Invalid email or password.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -36,7 +38,7 @@ export const useLogin = () => {
     identifier, setIdentifier, 
     password, setPassword, 
     remember, setRemember, 
-    showPass, toggleShowPass, 
-    error, onSubmit 
+    showPass, toggleShowPass,
+    error, loading, onSubmit
   };
 };
