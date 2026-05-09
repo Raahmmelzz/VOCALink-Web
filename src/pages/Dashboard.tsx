@@ -1,10 +1,4 @@
 import React, { useEffect, useState } from "react";
-<<<<<<< HEAD
-import { Colors as C, FontSize, Radius } from "../styles/tokens";
-import { Card, CardTitle, Avatar, StatusDot, Badge, Button } from "../components/ui";
-import type { NavPage, Student } from "../types";
-import api from '../services/api';
-=======
 import { Colors as C, FontSize, Radius, Shadow } from "../styles/tokens";
 import { Avatar, StatusDot, Badge, Button } from "../components/ui";
 import type { NavPage, Student } from "../types";
@@ -25,42 +19,12 @@ function avatarColor(id: number) {
 function displayName(s: { first_name: string; last_name: string; username: string }) {
   return (s.first_name || s.last_name) ? `${s.first_name} ${s.last_name}`.trim() : s.username;
 }
->>>>>>> 4774be5578f2920cc116dcfe6f114aed922a664d
 
 interface DashboardProps {
   setActive: (page: NavPage) => void;
   setSelectedStudent: (student: Student) => void;
 }
 
-<<<<<<< HEAD
-// ── Types (Must match Students.tsx) ──
-type RealStudent = {
-  id: number;
-  username: string;
-  first_name: string;
-  last_name: string;
-};
-
-const AVATAR_PALETTE = [
-  { bg: C.tealLight,   color: C.teal   },
-  { bg: C.blueLight,   color: C.blue   },
-  { bg: C.purpleLight, color: C.purple },
-  { bg: C.amberLight,  color: C.amber  },
-  { bg: C.redLight,    color: C.red    },
-];
-
-function avatarColor(id: number) {
-  return AVATAR_PALETTE[id % AVATAR_PALETTE.length];
-}
-
-function displayName(s: RealStudent) {
-  return (s.first_name || s.last_name)
-    ? `${s.first_name} ${s.last_name}`.trim()
-    : s.username;
-}
-
-const StatCard: React.FC<{ value: number; label: string; color: string }> = ({ value, label, color }) => (
-=======
 // ── Stat card ─────────────────────────────────────────────────────────────────
 const StatCard: React.FC<{
   value: number | string;
@@ -70,7 +34,6 @@ const StatCard: React.FC<{
   icon: React.ReactNode;
   trend?: string;
 }> = ({ value, label, bg, iconBg, icon, trend }) => (
->>>>>>> 4774be5578f2920cc116dcfe6f114aed922a664d
   <div style={{
     flex: 1, borderRadius: Radius.lg, padding: "20px 22px",
     background: bg, border: "1px solid rgba(0,0,0,0.06)",
@@ -139,39 +102,6 @@ const QuickAction: React.FC<{
 
 // ── Main Dashboard ─────────────────────────────────────────────────────────────
 const Dashboard: React.FC<DashboardProps> = ({ setActive, setSelectedStudent }) => {
-<<<<<<< HEAD
-  // ── State for real students ──
-  const [myStudents, setMyStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // ── Fetch students on mount ──
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const response = await api.get('/teacher/students/');
-        const data = response.data;
-        const realData = Array.isArray(data) ? data : [];
-        
-        // Format the database students into the UI structure
-        const formattedStudents: Student[] = realData.map(s => {
-          const av = avatarColor(s.id);
-          return {
-            id: s.id.toString(), // Student type usually expects string ID
-            name: displayName(s),
-            username: s.username,
-            status: "idle", // Default to idle until WebSocket support is added
-            lastMsg: "No recent messages",
-            time: "",
-            bg: av.bg,
-            color: av.color,
-            unread: 0, 
-          };
-        });
-
-        setMyStudents(formattedStudents);
-      } catch (error) {
-        console.error("Dashboard failed to fetch students:", error);
-=======
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState("");
@@ -202,40 +132,20 @@ const Dashboard: React.FC<DashboardProps> = ({ setActive, setSelectedStudent }) 
         setStudents(formatted);
       } catch {
         setError("Could not load students. Check your connection.");
->>>>>>> 4774be5578f2920cc116dcfe6f114aed922a664d
       } finally {
         setLoading(false);
       }
     };
-<<<<<<< HEAD
-
-    fetchStudents();
-  }, []);
-
-  // Calculate live stats based on fetched data
-  const online   = myStudents.filter(s => s.status === "online").length;
-  const requests = myStudents.filter(s => s.status === "request" || s.status === "urgent").length;
-  const idle     = myStudents.filter(s => s.status === "idle").length;
-=======
     fetchStudents();
   }, []);
 
   const online   = students.filter(s => s.status === "online").length;
   const requests = students.filter(s => s.status === "request" || s.status === "urgent").length;
   const idle     = students.filter(s => s.status === "idle").length;
->>>>>>> 4774be5578f2920cc116dcfe6f114aed922a664d
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
-<<<<<<< HEAD
-      {/* Stat row */}
-      <div style={{ display: "flex", gap: 12 }}>
-        <StatCard value={myStudents.length} label="Total students" color={C.text}    />
-        <StatCard value={online}            label="Online now"     color={C.teal}   />
-        <StatCard value={requests}          label="Requests"       color={C.amber}  />
-        <StatCard value={idle}              label="Idle"           color={C.gray3}  />
-=======
       {/* ── Welcome banner ── */}
       <div style={{
         borderRadius: Radius.xl,
@@ -260,7 +170,6 @@ const Dashboard: React.FC<DashboardProps> = ({ setActive, setSelectedStudent }) 
         <Button variant="primary" size="lg" onClick={() => setActive("broadcast")} style={{ zIndex: 1, flexShrink: 0, boxShadow: "0 4px 16px rgba(26,173,220,0.4)" }}>
           🎙 Start Broadcast
         </Button>
->>>>>>> 4774be5578f2920cc116dcfe6f114aed922a664d
       </div>
 
       {/* ── Stat cards ── */}
@@ -294,45 +203,6 @@ const Dashboard: React.FC<DashboardProps> = ({ setActive, setSelectedStudent }) 
 
       <div style={{ display: "flex", gap: 20 }}>
 
-<<<<<<< HEAD
-          {loading ? (
-            <div style={{ textAlign: "center", padding: "20px", color: C.text3, fontSize: FontSize.sm }}>
-              Loading your students...
-            </div>
-          ) : myStudents.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "20px", color: C.text3, fontSize: FontSize.sm }}>
-              You have no students assigned. Add them from the Students tab.
-            </div>
-          ) : (
-            myStudents.map(s => (
-              <div
-                key={s.id}
-                style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: Radius.md, cursor: "pointer" }}
-                onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = C.gray}
-                onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = "transparent"}
-                onClick={() => { setSelectedStudent(s); setActive("messages"); }}
-              >
-                <Avatar name={s.name} bg={s.bg} color={s.color} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: FontSize.base, fontWeight: 500, color: C.text }}>{s.name}</div>
-                  <div style={{ fontSize: FontSize.sm, color: C.text3, marginTop: 1 }}>{s.lastMsg}</div>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <StatusDot status={s.status} />
-                    <span style={{ fontSize: FontSize.xs, color: s.status === "request" || s.status === "urgent" ? C.amber : C.text3 }}>
-                      {s.status}
-                    </span>
-                  </div>
-                  {s.unread > 0 && (
-                    <Badge color="amber" style={{ fontSize: FontSize.xs }}>{s.unread} new</Badge>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-        </Card>
-=======
         {/* ── Student list ── */}
         <div style={{
           flex: 1, background: C.white, borderRadius: Radius.lg,
@@ -351,7 +221,6 @@ const Dashboard: React.FC<DashboardProps> = ({ setActive, setSelectedStudent }) 
             </div>
             <Button variant="primary" size="sm" onClick={() => setActive("broadcast")}>📡 Broadcast</Button>
           </div>
->>>>>>> 4774be5578f2920cc116dcfe6f114aed922a664d
 
           {error && (
             <div style={{ margin: 16, padding: "10px 14px", borderRadius: Radius.md, background: "#FEF2F2", border: "1px solid #FCA5A5", color: C.red, fontSize: FontSize.sm }}>
@@ -420,37 +289,6 @@ const Dashboard: React.FC<DashboardProps> = ({ setActive, setSelectedStudent }) 
         <div style={{ width: 240, display: "flex", flexDirection: "column", gap: 16 }}>
 
           {/* Quick actions */}
-<<<<<<< HEAD
-          <Card>
-            <CardTitle>Quick actions</CardTitle>
-            {([
-              { label: "Start STT Broadcast", page: "broadcast" as NavPage, dot: C.teal   },
-              { label: "View all messages",   page: "messages"  as NavPage, dot: C.purple },
-              { label: "Live CC log",         page: "livecc"    as NavPage, dot: C.blue   },
-            ]).map((a, i) => (
-              <Button
-                key={i}
-                onClick={() => setActive(a.page)}
-                style={{ width: "100%", marginBottom: 6, justifyContent: "flex-start" }}
-              >
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: a.dot }} />
-                {a.label}
-              </Button>
-            ))}
-          </Card>
-
-          {/* Session info */}
-          <Card>
-            <CardTitle>Session info</CardTitle>
-            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: FontSize.sm, color: C.text3 }}>Class</span>
-                  <span style={{ fontSize: FontSize.sm, fontWeight: 500, color: C.text }}>Active</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: FontSize.sm, color: C.text3 }}>Duration</span>
-                  <span style={{ fontSize: FontSize.sm, fontWeight: 500, color: C.text }}>00:00</span>
-=======
           <div style={{ background: C.white, borderRadius: Radius.lg, border: `1px solid ${C.gray2}`, boxShadow: Shadow.sm, overflow: "hidden" }}>
             <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.gray2}`, fontSize: FontSize.md, fontWeight: 700, color: C.text, background: "linear-gradient(to right, #FAFAFA, #F8FAFC)" }}>
               Quick Actions
@@ -495,7 +333,6 @@ const Dashboard: React.FC<DashboardProps> = ({ setActive, setSelectedStudent }) 
                     <div style={{ fontSize: FontSize.xs, color: C.text3, fontWeight: 500 }}>{key}</div>
                     <div style={{ fontSize: FontSize.sm, fontWeight: 600, color: C.text, marginTop: 1 }}>{val}</div>
                   </div>
->>>>>>> 4774be5578f2920cc116dcfe6f114aed922a664d
                 </div>
             </div>
           </div>

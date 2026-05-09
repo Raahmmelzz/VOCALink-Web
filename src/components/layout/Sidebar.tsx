@@ -30,8 +30,6 @@ interface SidebarProps {
   teacherPhoto: string | null;
 }
 
-<<<<<<< HEAD
-=======
 const NavBtn: React.FC<{
   isActive: boolean;
   onClick: () => void;
@@ -62,7 +60,6 @@ const NavBtn: React.FC<{
   );
 };
 
->>>>>>> 4774be5578f2920cc116dcfe6f114aed922a664d
 const Sidebar: React.FC<SidebarProps> = ({
   active, setActive,
   teacherName, teacherInitials, teacherPhoto,
@@ -96,15 +93,6 @@ const Sidebar: React.FC<SidebarProps> = ({
     navigate("/login");
   };
 
-<<<<<<< HEAD
-  // 4. Logic: If parent passes a real name (like after a Settings save), use it. 
-  // Otherwise, use our instantly fetched name so it never says "Loading..."
-  const isPropReal = teacherName && !teacherName.toLowerCase().includes("loading");
-  const displayName = isPropReal ? teacherName : (localName || "Loading...");
-  const displayInitials = isPropReal ? teacherInitials : (localInitials || "...");
-
-=======
->>>>>>> 4774be5578f2920cc116dcfe6f114aed922a664d
   return (
     <aside style={{
       width: 232,
@@ -225,13 +213,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           <span>Sign out</span>
         </div>
 
-<<<<<<< HEAD
-        <Divider />
-
-        {/* Teacher info — Dynamically Synced */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 6px" }}>
-          {/* Avatar: show photo if uploaded, else initials */}
-=======
         {/* Teacher info */}
         <div style={{
           margin: "0 8px 8px",
@@ -241,7 +222,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           border: "1px solid rgba(255,255,255,0.08)",
           display: "flex", alignItems: "center", gap: 10,
         }}>
->>>>>>> 4774be5578f2920cc116dcfe6f114aed922a664d
           <div style={{
             width: 32, height: 32, borderRadius: "50%",
             background: teacherPhoto ? "transparent" : "linear-gradient(135deg, #1AADDC, #0DD0F5)",
@@ -251,14 +231,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           }}>
             {teacherPhoto
               ? <img src={teacherPhoto} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-<<<<<<< HEAD
-              : <span style={{ fontSize: 10, fontWeight: 600, color: C.teal }}>{displayInitials}</span>
-            }
-          </div>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 500, color: C.text }}>{displayName}</div>
-            <div style={{ fontSize: 10, color: C.text3 }}>SNED Teacher</div>
-=======
               : <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>
                   {teacherInitials || "T"}
                 </span>
@@ -269,7 +241,6 @@ const Sidebar: React.FC<SidebarProps> = ({
               {teacherName || "Teacher"}
             </div>
             <div style={{ fontSize: FontSize.xs, color: "rgba(255,255,255,0.35)" }}>SNED Teacher</div>
->>>>>>> 4774be5578f2920cc116dcfe6f114aed922a664d
           </div>
         </div>
       </div>
