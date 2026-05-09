@@ -1,18 +1,61 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Colors as C, FontSize, Radius } from "../styles/tokens";
 import { Card, Avatar, CardTitle, StatusDot, Badge, Button } from "../components/ui";
 import Icon from "../components/ui/Icon";
-import { STUDENTS, MESSAGES, QUICK_REPLIES } from "../data/mockData";
+import { MESSAGES, QUICK_REPLIES } from "../data/mockData";
 import type { Student, Messages as MessagesType } from "../types";
+import api from '../services/api';
+
+// Reusing your color logic from Students.tsx for consistency
+const AVATAR_PALETTE = [
+  { bg: C.tealLight,   color: C.teal   },
+  { bg: C.blueLight,   color: C.blue   },
+  { bg: C.purpleLight, color: C.purple },
+  { bg: C.amberLight,  color: C.amber  },
+  { bg: C.redLight,    color: C.red    },
+];
 
 interface MessagesProps {
   selected: Student | null;
-  setSelected: (s: Student) => void;
+  setSelected: (s: Student | null) => void;
 }
 
 const Messages: React.FC<MessagesProps> = ({ selected, setSelected }) => {
-  const [msgs, setMsgs]   = useState<MessagesType>(MESSAGES);
+  const [msgs, setMsgs] = useState<MessagesType>(MESSAGES);
   const [reply, setReply] = useState("");
+  
+  // New state for real students
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 1. Fetch Real Students from your FastAPI backend
+  const fetchStudents = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get('/teacher/students/');
+      const data = response.data;
+      
+      // Transform backend data to match the UI "Student" type
+      const formatted = data.map((s: any) => ({
+        id: s.id,
+        name: (s.first_name || s.last_name) ? `${s.first_name} ${s.last_name}`.trim() : s.username,
+        status: s.status, // Uses the real online/offline status from the DB
+        unread: 0,
+        bg: AVATAR_PALETTE[s.id % AVATAR_PALETTE.length].bg,
+        color: AVATAR_PALETTE[s.id % AVATAR_PALETTE.length].color,
+      }));
+      
+      setStudents(formatted);
+    } catch (e) {
+      console.error("Error fetching students for messages:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
 
   const sendReply = (text: string) => {
     if (!selected || !text.trim()) return;
@@ -30,33 +73,40 @@ const Messages: React.FC<MessagesProps> = ({ selected, setSelected }) => {
       {/* Student sidebar */}
       <Card style={{ width: 220, flexShrink: 0, overflowY: "auto" }}>
         <CardTitle>Students</CardTitle>
-        {STUDENTS.map(s => (
-          <div
-            key={s.id}
-            onClick={() => setSelected(s)}
-            style={{
-              display: "flex", alignItems: "center", gap: 8,
-              padding: "7px 8px", borderRadius: Radius.md, cursor: "pointer",
-              background: selected?.id === s.id ? C.tealLight : "transparent",
-            }}
-            onMouseEnter={e => { if (selected?.id !== s.id) (e.currentTarget as HTMLDivElement).style.background = C.gray; }}
-            onMouseLeave={e => { if (selected?.id !== s.id) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
-          >
-            <Avatar name={s.name} bg={s.bg} color={s.color} size={28} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 500, color: C.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {s.name}
+        
+        {loading ? (
+          <div style={{ padding: 10, fontSize: FontSize.xs, color: C.text3 }}>Loading...</div>
+        ) : students.length === 0 ? (
+          <div style={{ padding: 10, fontSize: FontSize.xs, color: C.text3 }}>No students assigned.</div>
+        ) : (
+          students.map(s => (
+            <div
+              key={s.id}
+              onClick={() => setSelected(s)}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "7px 8px", borderRadius: Radius.md, cursor: "pointer",
+                background: selected?.id === s.id ? C.tealLight : "transparent",
+              }}
+              onMouseEnter={e => { if (selected?.id !== s.id) (e.currentTarget as HTMLDivElement).style.background = C.gray; }}
+              onMouseLeave={e => { if (selected?.id !== s.id) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
+            >
+              <Avatar name={s.name} bg={s.bg} color={s.color} size={28} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: C.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {s.name}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <StatusDot status={s.status as any} size={6} />
+                  <span style={{ fontSize: FontSize.xs, color: C.text3 }}>{s.status}</span>
+                </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <StatusDot status={s.status} size={6} />
-                <span style={{ fontSize: FontSize.xs, color: C.text3 }}>{s.status}</span>
-              </div>
+              {s.unread > 0 && (
+                <Badge color="amber" style={{ fontSize: FontSize.xs, padding: "1px 5px" }}>{s.unread}</Badge>
+              )}
             </div>
-            {s.unread > 0 && (
-              <Badge color="amber" style={{ fontSize: FontSize.xs, padding: "1px 5px" }}>{s.unread}</Badge>
-            )}
-          </div>
-        ))}
+          ))
+        )}
       </Card>
 
       {/* Chat area */}
@@ -69,7 +119,7 @@ const Messages: React.FC<MessagesProps> = ({ selected, setSelected }) => {
               <div>
                 <div style={{ fontSize: FontSize.base, fontWeight: 500, color: C.text }}>{selected.name}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <StatusDot status={selected.status} size={6} />
+                  <StatusDot status={selected.status as any} size={6} />
                   <span style={{ fontSize: FontSize.xs, color: C.text3 }}>{selected.status}</span>
                 </div>
               </div>
