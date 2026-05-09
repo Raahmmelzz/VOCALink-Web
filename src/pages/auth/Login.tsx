@@ -80,9 +80,9 @@ export default function Login() {
                 <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
                 <span>Remember me</span>
               </label>
-              <button type="button" className="link-btn" onClick={() => alert("Reset flow coming soon!")}>
+              <Link to="/forgot-password" className="link-btn">
                 Forgot Password?
-              </button>
+              </Link>
             </div>
 
             <button className="primary-btn" type="submit" disabled={loading}>
