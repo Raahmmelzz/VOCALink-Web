@@ -1,28 +1,106 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Colors as C, FontSize, Radius } from "../styles/tokens";
-import { Card, CardTitle, Button, ProgressBar, Divider, StatusDot } from "../components/ui";
+import { Card, CardTitle, Button, ProgressBar, Divider } from "../components/ui";
 import Icon from "../components/ui/Icon";
-import { STUDENTS, TRANSCRIPT_LINES } from "../data/mockData";
+import api from "../services/api";
+
+// Browser Speech Recognition setup
+const SpeechRecognition =
+  (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
 const Broadcast: React.FC = () => {
-  const [recording, setRecording] = useState(false);
-  const [lines, setLines]         = useState<string[]>([TRANSCRIPT_LINES[0]]);
-  const [sent, setSent]           = useState(false);
+  const [recording, setRecording]   = useState(false);
+  const [transcript, setTranscript] = useState("");
+  const [sending, setSending]       = useState(false);
+  const [sent, setSent]             = useState(false);
+  const [error, setError]           = useState("");
+  const [sttSupported]              = useState(!!SpeechRecognition);
+
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    return () => {
+      // Clean up on unmount
+      recognitionRef.current?.stop();
+    };
+  }, []);
+
+  const startRecording = () => {
+    if (!SpeechRecognition) {
+      setError("Speech recognition is not supported in this browser. Use Chrome.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+
+    recognition.continuous = true;       // Keep listening
+    recognition.interimResults = true;   // Show words as they're spoken
+    recognition.lang = "en-US";
+
+    let finalText = transcript;
+
+    recognition.onresult = (event: any) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalText += result[0].transcript + " ";
+        } else {
+          interim = result[0].transcript;
+        }
+      }
+      setTranscript(finalText + interim);
+    };
+
+    recognition.onerror = (event: any) => {
+      if (event.error !== "aborted") {
+        setError(`Mic error: ${event.error}. Make sure mic is allowed.`);
+      }
+      setRecording(false);
+    };
+
+    recognition.onend = () => {
+      setRecording(false);
+    };
+
+    recognition.start();
+    setRecording(true);
+    setSent(false);
+    setError("");
+  };
+
+  const stopRecording = () => {
+    recognitionRef.current?.stop();
+    setRecording(false);
+  };
 
   const handleToggle = () => {
-    if (!recording) {
-      setRecording(true);
-      setSent(false);
-      setTimeout(() => setLines([TRANSCRIPT_LINES[0], TRANSCRIPT_LINES[1]]), 1500);
-      setTimeout(() => setLines([...TRANSCRIPT_LINES]), 3000);
+    if (recording) {
+      stopRecording();
     } else {
-      setRecording(false);
-      setSent(true);
+      startRecording();
     }
   };
 
-  const activeStudents = STUDENTS.filter(s => s.status !== "idle");
-  const idleCount      = STUDENTS.filter(s => s.status === "idle").length;
+  const handleBroadcast = async () => {
+    if (!transcript.trim()) return;
+    // Stop recording first if still going
+    if (recording) stopRecording();
+
+    setSending(true);
+    setError("");
+    try {
+      await api.post("/broadcast/", { text: transcript.trim(), speaker: "teacher" });
+      setSent(true);
+      setTranscript("");
+      setTimeout(() => setSent(false), 3000);
+    } catch {
+      setError("Failed to broadcast. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <div style={{ display: "flex", gap: 16 }}>
@@ -31,22 +109,25 @@ const Broadcast: React.FC = () => {
       <Card style={{ flex: 1 }}>
         <CardTitle>Speech-to-Text Broadcast</CardTitle>
         <p style={{ fontSize: FontSize.sm, color: C.text3, marginBottom: 20, lineHeight: 1.6 }}>
-          Speak naturally. Your voice is transcribed in real time and broadcast
-          as Live Closed Captions to all connected student devices.
+          Click the mic and speak. Your voice is transcribed in real time.
+          When done, click <strong>Broadcast</strong> to send to all students.
         </p>
 
         {/* Mic button */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "20px 0" }}>
           <button
             onClick={handleToggle}
+            disabled={!sttSupported}
             style={{
               width: 72, height: 72, borderRadius: "50%", border: "none",
-              background: recording ? C.redDark : C.teal, cursor: "pointer",
+              background: recording ? C.redDark : C.teal,
+              cursor: sttSupported ? "pointer" : "not-allowed",
               display: "flex", alignItems: "center", justifyContent: "center",
               boxShadow: recording
-                ? `0 0 0 10px rgba(226,75,74,0.12)`
+                ? `0 0 0 10px rgba(226,75,74,0.12), 0 0 0 20px rgba(226,75,74,0.06)`
                 : `0 0 0 8px ${C.tealLight}`,
               transition: "all 0.2s",
+              opacity: sttSupported ? 1 : 0.5,
             }}
           >
             {recording
@@ -56,7 +137,11 @@ const Broadcast: React.FC = () => {
           </button>
 
           <div style={{ fontSize: FontSize.base, fontWeight: 500, color: recording ? C.redDark : C.text2 }}>
-            {recording ? "Recording — tap to stop & broadcast" : "Tap to start recording"}
+            {!sttSupported
+              ? "Use Chrome for voice input"
+              : recording
+              ? "🎙 Listening... tap to stop"
+              : "Tap mic to start speaking"}
           </div>
 
           {recording && (
@@ -69,20 +154,36 @@ const Broadcast: React.FC = () => {
         {/* Transcript */}
         <div style={{ marginTop: 8 }}>
           <div style={{ fontSize: FontSize.sm, fontWeight: 600, color: C.text3, marginBottom: 8 }}>
-            Live transcript
+            Transcript {recording && <span style={{ color: C.teal }}>● Live</span>}
           </div>
-          <div style={{
-            background: C.gray, borderRadius: Radius.md,
-            padding: "10px 14px", minHeight: 72,
-            fontSize: 13, lineHeight: 1.7, color: C.text2,
-          }}>
-            {lines.map((line, i) => (
-              <div key={i} style={{ color: i === lines.length - 1 ? C.text : C.text2 }}>
-                {line}
-              </div>
-            ))}
-          </div>
+          <textarea
+            value={transcript}
+            onChange={e => setTranscript(e.target.value)}
+            placeholder="Your speech will appear here as you speak... or type manually."
+            rows={4}
+            style={{
+              width: "100%", boxSizing: "border-box",
+              background: recording ? "#F0FDF9" : C.gray,
+              borderRadius: Radius.md,
+              padding: "10px 14px", minHeight: 80,
+              fontSize: 13, lineHeight: 1.7, color: C.text2,
+              border: `1px solid ${recording ? C.teal : C.gray2}`,
+              outline: "none", resize: "vertical", fontFamily: "inherit",
+              transition: "all 0.2s",
+            }}
+          />
         </div>
+
+        {/* Error */}
+        {error && (
+          <div style={{
+            marginTop: 10, padding: "10px 14px",
+            background: "#FEF2F2", borderRadius: Radius.md,
+            fontSize: FontSize.sm, color: C.red,
+          }}>
+            ⚠ {error}
+          </div>
+        )}
 
         {/* Success banner */}
         {sent && (
@@ -93,42 +194,61 @@ const Broadcast: React.FC = () => {
           }}>
             <Icon name="check" size={14} color={C.teal} />
             <span style={{ fontSize: FontSize.sm, color: C.teal, fontWeight: 500 }}>
-              Broadcast sent to all {STUDENTS.length} students
+              ✅ Broadcast sent! Students will see it within 2 seconds.
             </span>
           </div>
         )}
 
         {/* Actions */}
         <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-          <Button variant="primary" onClick={handleToggle} style={{ flex: 1 }}>
-            {recording ? "Stop & broadcast" : "Start recording"}
+          <Button
+            variant="primary"
+            onClick={handleBroadcast}
+            disabled={!transcript.trim() || sending}
+            style={{ flex: 1 }}
+          >
+            {sending ? "Sending..." : "📡 Broadcast to students"}
           </Button>
-          {!recording && (
-            <Button onClick={() => {}} style={{ flex: 1 }}>
-              Review transcript
-            </Button>
-          )}
+          <Button
+            onClick={() => setTranscript("")}
+            disabled={!transcript.trim() || recording}
+            style={{ flex: 1 }}
+          >
+            Clear
+          </Button>
         </div>
       </Card>
 
-      {/* Broadcasting to */}
+      {/* Info panel */}
       <div style={{ width: 230 }}>
         <Card>
-          <CardTitle>Broadcasting to</CardTitle>
-          {activeStudents.map(s => (
-            <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0" }}>
-              <StatusDot status={s.status} />
-              <span style={{ fontSize: 12, color: C.text }}>{s.name}</span>
-            </div>
-          ))}
-          {idleCount > 0 && (
-            <>
-              <Divider />
-              <div style={{ fontSize: FontSize.sm, color: C.text3 }}>
-                {idleCount} student(s) idle — CC will still be delivered
+          <CardTitle>How it works</CardTitle>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {[
+              { step: "1", text: "Click mic and speak naturally" },
+              { step: "2", text: "Words appear in real time" },
+              { step: "3", text: "Click Broadcast to send" },
+              { step: "4", text: "Students see it on Live CC within 2 seconds" },
+            ].map(item => (
+              <div key={item.step} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <div style={{
+                  width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                  background: C.teal, color: C.white,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 11, fontWeight: 700,
+                }}>
+                  {item.step}
+                </div>
+                <span style={{ fontSize: FontSize.sm, color: C.text2, lineHeight: 1.5 }}>
+                  {item.text}
+                </span>
               </div>
-            </>
-          )}
+            ))}
+          </div>
+          <Divider style={{ margin: "12px 0" }} />
+          <div style={{ fontSize: FontSize.xs, color: C.text3, lineHeight: 1.6 }}>
+            💡 Use <strong>Chrome</strong> for best voice recognition support.
+          </div>
         </Card>
       </div>
     </div>
