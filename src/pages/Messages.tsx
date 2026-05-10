@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Colors as C, FontSize, Radius } from "../styles/tokens";
 import { Card, Avatar, CardTitle, StatusDot, Badge, Button } from "../components/ui";
 import Icon from "../components/ui/Icon";
-import { MESSAGES, QUICK_REPLIES } from "../data/mockData";
-import type { Student, Messages as MessagesType } from "../types";
+import { QUICK_REPLIES } from "../data/mockData";
+import type { Student } from "../types";
 import api from '../services/api';
 
-// Reusing your color logic from Students.tsx for consistency
 const AVATAR_PALETTE = [
   { bg: C.tealLight,   color: C.teal   },
   { bg: C.blueLight,   color: C.blue   },
@@ -15,69 +14,104 @@ const AVATAR_PALETTE = [
   { bg: C.redLight,    color: C.red    },
 ];
 
+interface Message {
+  id: number;
+  sender_id: number;
+  receiver_id: number;
+  text: string;
+  is_aac: boolean;
+  sent_at: string;
+}
+
 interface MessagesProps {
   selected: Student | null;
   setSelected: (s: Student | null) => void;
 }
 
 const Messages: React.FC<MessagesProps> = ({ selected, setSelected }) => {
-  const [msgs, setMsgs] = useState<MessagesType>(MESSAGES);
+  const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const [reply, setReply] = useState("");
-  
-  // New state for real students
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // 1. Fetch Real Students from your FastAPI backend
+  // 1. Fetch Student List (Class Roster)
   const fetchStudents = async () => {
-    setLoading(true);
     try {
       const response = await api.get('/teacher/students/');
-      const data = response.data;
-      
-      // Transform backend data to match the UI "Student" type
-      const formatted = data.map((s: any) => ({
+      const formatted = response.data.map((s: any) => ({
         id: s.id,
         name: (s.first_name || s.last_name) ? `${s.first_name} ${s.last_name}`.trim() : s.username,
-        status: s.status, // Uses the real online/offline status from the DB
+        status: s.status,
         unread: 0,
         bg: AVATAR_PALETTE[s.id % AVATAR_PALETTE.length].bg,
         color: AVATAR_PALETTE[s.id % AVATAR_PALETTE.length].color,
       }));
-      
       setStudents(formatted);
     } catch (e) {
-      console.error("Error fetching students for messages:", e);
+      console.error("Error fetching students:", e);
     } finally {
       setLoading(false);
     }
   };
 
+  // 2. Fetch Chat History for Selected Student
+  const fetchChat = async () => {
+    if (!selected) return;
+    try {
+      const response = await api.get(`/messages/${selected.id}`);
+      setChatHistory(response.data);
+    } catch (e) {
+      console.error("Failed to load chat:", e);
+    }
+  };
+
   useEffect(() => {
     fetchStudents();
+    const interval = setInterval(fetchStudents, 10000); // Refresh list every 10s
+    return () => clearInterval(interval);
   }, []);
 
-  const sendReply = (text: string) => {
+  useEffect(() => {
+    if (selected) {
+      fetchChat();
+      const interval = setInterval(fetchChat, 3000); // Poll for new messages every 3s
+      return () => clearInterval(interval);
+    } else {
+      setChatHistory([]);
+    }
+  }, [selected]);
+
+  // Scroll to bottom when history updates
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [chatHistory]);
+
+  const sendReply = async (text: string) => {
     if (!selected || !text.trim()) return;
-    const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    setMsgs(prev => ({
-      ...prev,
-      [selected.id]: [...(prev[selected.id] ?? []), { from: "teacher", text, time: now }],
-    }));
-    setReply("");
+    try {
+      await api.post('/messages/', {
+        receiver_id: selected.id,
+        text: text
+      });
+      setReply("");
+      fetchChat(); // Immediate refresh
+    } catch (e) {
+      console.error("Error sending message:", e);
+    }
   };
 
   return (
     <div style={{ display: "flex", gap: 16, flex: 1, minHeight: 0 }}>
-
       {/* Student sidebar */}
       <Card style={{ width: 220, flexShrink: 0, overflowY: "auto" }}>
         <CardTitle>Students</CardTitle>
-        
         {loading ? (
           <div style={{ padding: 10, fontSize: FontSize.xs, color: C.text3 }}>Loading...</div>
         ) : students.length === 0 ? (
-          <div style={{ padding: 10, fontSize: FontSize.xs, color: C.text3 }}>No students assigned.</div>
+          <div style={{ padding: 10, fontSize: FontSize.xs, color: C.text3 }}>No students found.</div>
         ) : (
           students.map(s => (
             <div
@@ -88,22 +122,15 @@ const Messages: React.FC<MessagesProps> = ({ selected, setSelected }) => {
                 padding: "7px 8px", borderRadius: Radius.md, cursor: "pointer",
                 background: selected?.id === s.id ? C.tealLight : "transparent",
               }}
-              onMouseEnter={e => { if (selected?.id !== s.id) (e.currentTarget as HTMLDivElement).style.background = C.gray; }}
-              onMouseLeave={e => { if (selected?.id !== s.id) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
             >
               <Avatar name={s.name} bg={s.bg} color={s.color} size={28} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 500, color: C.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {s.name}
-                </div>
+                <div style={{ fontSize: 12, fontWeight: 500, color: C.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.name}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                   <StatusDot status={s.status as any} size={6} />
                   <span style={{ fontSize: FontSize.xs, color: C.text3 }}>{s.status}</span>
                 </div>
               </div>
-              {s.unread > 0 && (
-                <Badge color="amber" style={{ fontSize: FontSize.xs, padding: "1px 5px" }}>{s.unread}</Badge>
-              )}
             </div>
           ))
         )}
@@ -113,7 +140,6 @@ const Messages: React.FC<MessagesProps> = ({ selected, setSelected }) => {
       <Card style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
         {selected ? (
           <>
-            {/* Header */}
             <div style={{ display: "flex", alignItems: "center", gap: 10, paddingBottom: 12, marginBottom: 12, borderBottom: `1px solid ${C.gray2}` }}>
               <Avatar name={selected.name} bg={selected.bg} color={selected.color} />
               <div>
@@ -125,56 +151,44 @@ const Messages: React.FC<MessagesProps> = ({ selected, setSelected }) => {
               </div>
             </div>
 
-            {/* Messages */}
-            <div style={{ flex: 1, overflowY: "auto", marginBottom: 12, display: "flex", flexDirection: "column", gap: 6 }}>
-              {(msgs[selected.id] ?? []).map((m, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: m.from === "teacher" ? "flex-end" : "flex-start" }}>
-                  <div style={{
-                    padding: "8px 12px", borderRadius: Radius.md, maxWidth: "80%",
-                    background: m.from === "teacher" ? C.teal : C.gray,
-                    color:      m.from === "teacher" ? C.white : C.text,
-                  }}>
-                    <div style={{ fontSize: 13, lineHeight: 1.5 }}>{m.text}</div>
-                    <div style={{ fontSize: FontSize.xs, marginTop: 3, opacity: 0.6 }}>{m.time}</div>
+            <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", marginBottom: 12, display: "flex", flexDirection: "column", gap: 8, paddingRight: 4 }}>
+              {chatHistory.map((m) => {
+                const isMe = m.sender_id !== selected.id;
+                return (
+                  <div key={m.id} style={{ display: "flex", justifyContent: isMe ? "flex-end" : "flex-start" }}>
+                    <div style={{
+                      padding: "8px 12px", borderRadius: Radius.md, maxWidth: "80%",
+                      background: isMe ? C.teal : C.gray,
+                      color: isMe ? C.white : C.text,
+                      boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+                    }}>
+                      {m.is_aac && !isMe && <div style={{ fontSize: 10, fontWeight: 700, marginBottom: 2, opacity: 0.8 }}>AAC TAP</div>}
+                      <div style={{ fontSize: 13, lineHeight: 1.5 }}>{m.text}</div>
+                      <div style={{ fontSize: 10, marginTop: 3, opacity: 0.6, textAlign: "right" }}>
+                        {new Date(m.sent_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-            {/* Quick replies */}
             <div style={{ marginBottom: 10 }}>
               <div style={{ fontSize: FontSize.xs, color: C.text3, marginBottom: 6 }}>Quick reply</div>
               <div style={{ display: "flex", gap: 6 }}>
                 {QUICK_REPLIES.map((q, i) => (
-                  <button
-                    key={i}
-                    onClick={() => sendReply(q.label)}
-                    style={{
-                      flex: 1, padding: "9px 0", borderRadius: Radius.md,
-                      fontSize: 12, fontWeight: 600, cursor: "pointer",
-                      border: "none", background: q.bg, color: q.text,
-                      fontFamily: "inherit",
-                    }}
-                  >
-                    {q.label}
-                  </button>
+                  <button key={i} onClick={() => sendReply(q.label)} style={{ flex: 1, padding: "9px 0", borderRadius: Radius.md, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", background: q.bg, color: q.text }}>{q.label}</button>
                 ))}
               </div>
             </div>
 
-            {/* Custom input */}
             <div style={{ display: "flex", gap: 8 }}>
               <input
                 value={reply}
                 onChange={e => setReply(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && sendReply(reply)}
                 placeholder="Type a custom message..."
-                style={{
-                  flex: 1, padding: "8px 12px",
-                  borderRadius: Radius.md, border: `1px solid ${C.gray2}`,
-                  fontSize: FontSize.base, color: C.text,
-                  background: C.white, fontFamily: "inherit",
-                }}
+                style={{ flex: 1, padding: "8px 12px", borderRadius: Radius.md, border: `1px solid ${C.gray2}`, fontSize: FontSize.base, color: C.text, background: C.white }}
               />
               <Button variant="primary" onClick={() => sendReply(reply)} style={{ padding: "8px 12px" }}>
                 <Icon name="send" size={14} color={C.white} />
@@ -182,9 +196,7 @@ const Messages: React.FC<MessagesProps> = ({ selected, setSelected }) => {
             </div>
           </>
         ) : (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: C.text3, fontSize: FontSize.base }}>
-            Select a student to view messages
-          </div>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: C.text3 }}>Select a student to view messages</div>
         )}
       </Card>
     </div>
