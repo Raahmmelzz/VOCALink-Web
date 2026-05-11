@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm \"src/pages/Dashboard-lacsy.tsx\" \"src/pages/Students-lacsy.tsx\" \"src/pages/Settings-lacsy.tsx\" \"src/context/AuthContext-lacsy.tsx\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\olacz\\OneDrive\\Desktop\\vocalinkweb\\VOCALink-Web\\src\\pages"
+    ]
+  }
+}

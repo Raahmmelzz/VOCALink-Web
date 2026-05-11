@@ -8,6 +8,9 @@ import api from "../services/api";
 const SpeechRecognition =
   (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
+// Detect if browser is Chrome/Edge
+const isChromium = !!(window as any).chrome;
+
 const Broadcast: React.FC = () => {
   const [recording, setRecording]   = useState(false);
   const [transcript, setTranscript] = useState("");
@@ -103,6 +106,24 @@ const Broadcast: React.FC = () => {
   };
 
   return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+      {/* Browser warning */}
+      {!isChromium && (
+        <div style={{
+          padding: "12px 18px", borderRadius: Radius.md,
+          background: "#FEF3C7", border: "1px solid #FCD34D",
+          display: "flex", alignItems: "center", gap: 10,
+          fontSize: FontSize.sm, color: "#92400E", fontWeight: 500,
+        }}>
+          <span style={{ fontSize: 20 }}>⚠️</span>
+          <span>
+            <strong>Voice input requires Chrome or Edge.</strong> You are using a different browser.
+            Please switch to <strong>Google Chrome</strong> for the STT Broadcast to work.
+          </span>
+        </div>
+      )}
+
     <div style={{ display: "flex", gap: 16 }}>
 
       {/* Main panel */}
@@ -251,6 +272,7 @@ const Broadcast: React.FC = () => {
           </div>
         </Card>
       </div>
+    </div>
     </div>
   );
 };
