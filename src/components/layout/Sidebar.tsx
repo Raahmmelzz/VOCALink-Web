@@ -232,13 +232,13 @@ const Sidebar: React.FC<SidebarProps> = ({
             {teacherPhoto
               ? <img src={teacherPhoto} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               : <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>
-                  {teacherInitials || "T"}
+                  {teacherInitials || localInitials || "T"}
                 </span>
             }
           </div>
           <div style={{ overflow: "hidden" }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "#FFFFFF", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {teacherName || "Teacher"}
+              {teacherName || localName || "Teacher"}
             </div>
             <div style={{ fontSize: FontSize.xs, color: "rgba(255,255,255,0.35)" }}>SNED Teacher</div>
           </div>

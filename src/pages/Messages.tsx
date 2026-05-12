@@ -56,11 +56,18 @@ const Messages: React.FC<MessagesProps> = ({ selected, setSelected }) => {
   };
 
   // 2. Fetch Chat History for Selected Student
+  // GET /messages/my-students returns ALL messages between teacher and their students.
+  // We fetch everything once and filter client-side — no /messages/:id endpoint exists.
   const fetchChat = async () => {
     if (!selected) return;
     try {
-      const response = await api.get(`/messages/${selected.id}`);
-      setChatHistory(response.data);
+      const response = await api.get(`/messages/my-students`);
+      const all: Message[] = response.data;
+      // Keep only messages exchanged between the teacher and this specific student
+      const thread = all.filter(
+        (m) => m.sender_id === selected.id || m.receiver_id === selected.id
+      );
+      setChatHistory(thread);
     } catch (e) {
       console.error("Failed to load chat:", e);
     }
@@ -165,7 +172,7 @@ const Messages: React.FC<MessagesProps> = ({ selected, setSelected }) => {
                       {m.is_aac && !isMe && <div style={{ fontSize: 10, fontWeight: 700, marginBottom: 2, opacity: 0.8 }}>AAC TAP</div>}
                       <div style={{ fontSize: 13, lineHeight: 1.5 }}>{m.text}</div>
                       <div style={{ fontSize: 10, marginTop: 3, opacity: 0.6, textAlign: "right" }}>
-                        {new Date(m.sent_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(m.sent_at.endsWith("Z") || m.sent_at.includes("+") ? m.sent_at : m.sent_at + "Z").toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </div>
                     </div>
                   </div>

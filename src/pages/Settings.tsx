@@ -97,10 +97,14 @@ const Settings: React.FC<SettingsProps> = ({ teacherPhoto, onNameChange, onPhoto
       try {
         const response = await api.get('/users/me/');
         const data = response.data;
-        setUsername(data.username || "");
+        const uname = data.username || "";
+        // Pre-fill displayName from username if it was never set
+        const dname = data.display_name || uname;
+
+        setUsername(uname);
         setFirstName(data.first_name || "");
         setLastName(data.last_name || "");
-        setDisplayName(data.display_name || "");
+        setDisplayName(dname);
         setEmail(data.email || "");
         setPhone(data.contact_number || "");
         setRoom(data.room_section || "");
@@ -109,17 +113,12 @@ const Settings: React.FC<SettingsProps> = ({ teacherPhoto, onNameChange, onPhoto
         setSchool(data.organization || "");
         setBio(data.bio || "");
 
-        setSavedDisplayName(data.display_name || "");
+        setSavedDisplayName(dname);
         setSavedRoom(data.room_section || "");
         setSavedDepartment(data.department || "");
         
-        // This will display something like: "Teresa @treyes843"
-        const sidebarName = data.display_name || (data.username ? `@${data.username}` : "Teacher");
-        const initials = data.display_name 
-            ? data.display_name.substring(0, 2).toUpperCase() 
-            : (data.username ? data.username.substring(0, 2).toUpperCase() : "");
-        
-        onNameChange(sidebarName, initials);
+        // Sidebar always shows display_name, falling back to username (no @ prefix)
+        onNameChange(dname || "Teacher", (dname || "Teacher").substring(0, 2).toUpperCase());
       } catch (error) {
         console.error("Failed to load profile", error);
       } finally {
@@ -169,27 +168,13 @@ const Settings: React.FC<SettingsProps> = ({ teacherPhoto, onNameChange, onPhoto
 
       await api.patch('/users/me/', payload);
 
-      // Helper to safely get initials for the profile circle
-      const fChar = firstName.trim().charAt(0).toUpperCase();
-      const initials = fChar || "T";
-      
-      // Update sidebar instantly with First Name + @Username
-      // 💥 Instantly update sidebar using the new rule
-      const sidebarName = displayName || `@${username}`;
-      const calculatedInitials = displayName 
-          ? displayName.substring(0, 2).toUpperCase() 
-          : (username ? username.substring(0, 2).toUpperCase() : "T");
-          
-      onNameChange(sidebarName, initials);
-      
-      // Update the "Saved" labels
-      onNameChange(displayName, initials || "TR");
+      // Update sidebar with whatever the user typed as display name, fall back to username
+      const savedName = displayName.trim() || username;
+      onNameChange(savedName, savedName.substring(0, 2).toUpperCase());
+      setSavedDisplayName(savedName);
       onPhotoChange(pendingPhoto);
-      
-      // Update the "Saved" labels in the sidebar
-      setSavedDisplayName(displayName);
       setSavedRoom(room);
-      setSavedDepartment(department); 
+      setSavedDepartment(department);
       
       setToast(true);
       setTimeout(() => setToast(false), 2200);
