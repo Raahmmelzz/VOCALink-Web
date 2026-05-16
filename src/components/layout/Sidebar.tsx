@@ -18,7 +18,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", label: "Dashboard",     icon: "home"  },
   { id: "students",  label: "Students",      icon: "users" },
   { id: "broadcast", label: "STT Broadcast", icon: "mic"   },
-  { id: "messages",  label: "Messages",      icon: "msg", badge: 3 },
+
   { id: "livecc",    label: "Live CC Log",   icon: "cc"    },
 ];
 

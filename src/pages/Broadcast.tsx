@@ -19,6 +19,42 @@ const Broadcast: React.FC = () => {
   const [error, setError]           = useState("");
   const [sttSupported]              = useState(!!SpeechRecognition);
 
+  // ── Session state ──
+  const [sessionActive, setSessionActive] = useState(false);
+  const [sessionCode, setSessionCode]     = useState<string | null>(null);
+  const [sessionLogs, setSessionLogs]     = useState<any[]>([]);
+  const [togglingSession, setTogglingSession] = useState(false);
+
+  // Check if session is already active on mount
+  useEffect(() => {
+    api.get("/sessions/teacher").then(res => {
+      setSessionActive(res.data.active);
+      setSessionCode(res.data.session_code || null);
+    }).catch(() => {});
+  }, []);
+
+  // Poll session logs every 2s when session is active
+  useEffect(() => {
+    if (!sessionActive) { setSessionLogs([]); return; }
+    const poll = () => {
+      api.get("/sessions/logs/").then(res => setSessionLogs(res.data)).catch(() => {});
+    };
+    poll();
+    const interval = setInterval(poll, 2000);
+    return () => clearInterval(interval);
+  }, [sessionActive]);
+
+  const toggleSession = async () => {
+    setTogglingSession(true);
+    try {
+      const res = await api.post("/sessions/toggle");
+      setSessionActive(res.data.active);
+      setSessionCode(res.data.session_code || null);
+      if (!res.data.active) setSessionLogs([]);
+    } catch {}
+    setTogglingSession(false);
+  };
+
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -240,37 +276,118 @@ const Broadcast: React.FC = () => {
         </div>
       </Card>
 
-      {/* Info panel */}
-      <div style={{ width: 230 }}>
+      {/* Right column */}
+      <div style={{ width: 260, display: "flex", flexDirection: "column", gap: 14 }}>
+
+        {/* Session control */}
         <Card>
-          <CardTitle>How it works</CardTitle>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {[
-              { step: "1", text: "Click mic and speak naturally" },
-              { step: "2", text: "Words appear in real time" },
-              { step: "3", text: "Click Broadcast to send" },
-              { step: "4", text: "Students see it on Live CC within 2 seconds" },
-            ].map(item => (
-              <div key={item.step} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                <div style={{
-                  width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                  background: C.teal, color: C.white,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 11, fontWeight: 700,
-                }}>
-                  {item.step}
-                </div>
-                <span style={{ fontSize: FontSize.sm, color: C.text2, lineHeight: 1.5 }}>
-                  {item.text}
-                </span>
+          <CardTitle>Class Session</CardTitle>
+          <div style={{
+            padding: "12px 14px", borderRadius: Radius.md, marginBottom: 12,
+            background: sessionActive ? "rgba(34,197,94,0.08)" : C.gray,
+            border: `1px solid ${sessionActive ? "rgba(34,197,94,0.3)" : C.gray2}`,
+            display: "flex", alignItems: "center", gap: 8,
+          }}>
+            <div style={{
+              width: 8, height: 8, borderRadius: "50%",
+              background: sessionActive ? "#22C55E" : C.gray3,
+              boxShadow: sessionActive ? "0 0 0 3px rgba(34,197,94,0.25)" : "none",
+            }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: FontSize.sm, fontWeight: 600, color: sessionActive ? "#15803D" : C.text2 }}>
+                {sessionActive ? "Session Active" : "No Active Session"}
               </div>
-            ))}
+              {sessionCode && (
+                <div style={{ fontSize: FontSize.xs, color: C.text3, marginTop: 2 }}>
+                  Code: <strong>{sessionCode}</strong>
+                </div>
+              )}
+            </div>
           </div>
-          <Divider style={{ margin: "12px 0" }} />
-          <div style={{ fontSize: FontSize.xs, color: C.text3, lineHeight: 1.6 }}>
-            💡 Use <strong>Chrome</strong> for best voice recognition support.
-          </div>
+          <Button
+            variant={sessionActive ? "danger" : "primary"}
+            onClick={toggleSession}
+            disabled={togglingSession}
+            style={{ width: "100%", justifyContent: "center" }}
+          >
+            {togglingSession ? "..." : sessionActive ? "⏹ End Session" : "▶ Start Session"}
+          </Button>
         </Card>
+
+        {/* Live session feed */}
+        {sessionActive && (
+          <Card style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <CardTitle>Live Icon Taps</CardTitle>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#22C55E", boxShadow: "0 0 0 3px rgba(34,197,94,0.25)" }} />
+                <span style={{ fontSize: FontSize.xs, color: "#15803D", fontWeight: 600 }}>Live</span>
+              </div>
+            </div>
+
+            {sessionLogs.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "20px 0", color: C.text3, fontSize: FontSize.sm }}>
+                Waiting for students to tap icons...
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 320, overflowY: "auto" }}>
+                {sessionLogs.map(log => (
+                  <div key={log.id} style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "8px 10px", borderRadius: Radius.md,
+                    background: C.gray, border: `1px solid ${C.gray2}`,
+                  }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: Radius.sm,
+                      background: C.tealLight, display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 18, flexShrink: 0,
+                    }}>
+                      {/* Show emoji based on icon_id if possible */}
+                      🗣
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: FontSize.sm, fontWeight: 600, color: C.text }}>{log.icon_label}</div>
+                      <div style={{ fontSize: FontSize.xs, color: C.text3 }}>
+                        @{log.student_name} · {log.tapped_at?.slice(11, 16)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        )}
+
+        {/* How it works */}
+        {!sessionActive && (
+          <Card>
+            <CardTitle>How it works</CardTitle>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {[
+                { step: "1", text: "Start a session above" },
+                { step: "2", text: "Students tap icons on their board" },
+                { step: "3", text: "Taps appear here in real time" },
+                { step: "4", text: "Broadcast captions via the mic" },
+              ].map(item => (
+                <div key={item.step} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                  <div style={{
+                    width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                    background: C.teal, color: C.white,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 11, fontWeight: 700,
+                  }}>
+                    {item.step}
+                  </div>
+                  <span style={{ fontSize: FontSize.sm, color: C.text2, lineHeight: 1.5 }}>{item.text}</span>
+                </div>
+              ))}
+            </div>
+            <Divider style={{ margin: "12px 0" }} />
+            <div style={{ fontSize: FontSize.xs, color: C.text3, lineHeight: 1.6 }}>
+              💡 Use <strong>Chrome</strong> for voice recognition.
+            </div>
+          </Card>
+        )}
       </div>
     </div>
     </div>
