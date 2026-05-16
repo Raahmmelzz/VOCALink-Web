@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Colors as C, FontSize, Radius } from "../../styles/tokens";
 import { Badge } from "../ui";
 import Icon from "../ui/Icon";
 import type { NavPage } from "../../types";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import api from "../../services/api"; // 1. Added API import
 
 interface NavItem {
   id: NavPage;
@@ -67,6 +68,25 @@ const Sidebar: React.FC<SidebarProps> = ({
   const navigate = useNavigate();
   const [settingsHovered, setSettingsHovered] = React.useState(false);
   const [logoutHovered, setLogoutHovered] = React.useState(false);
+
+  // 2. Local state to catch the username immediately on load
+  const [localName, setLocalName] = useState("");
+  const [localInitials, setLocalInitials] = useState("");
+
+  // 3. Fetch user data instantly when the sidebar appears
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await api.get('users/me/');
+        const defaultName = res.data.display_name || res.data.username || "User";
+        setLocalName(defaultName);
+        setLocalInitials(defaultName.substring(0, 2).toUpperCase());
+      } catch (error) {
+        console.error("Sidebar failed to fetch user:", error);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -212,13 +232,13 @@ const Sidebar: React.FC<SidebarProps> = ({
             {teacherPhoto
               ? <img src={teacherPhoto} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               : <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>
-                  {teacherInitials || "T"}
+                  {teacherInitials || localInitials || "T"}
                 </span>
             }
           </div>
           <div style={{ overflow: "hidden" }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "#FFFFFF", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {teacherName || "Teacher"}
+              {teacherName || localName || "Teacher"}
             </div>
             <div style={{ fontSize: FontSize.xs, color: "rgba(255,255,255,0.35)" }}>SNED Teacher</div>
           </div>

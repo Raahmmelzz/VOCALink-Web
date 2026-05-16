@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import "./styles/global.css";
 import "./styles/auth.css";
@@ -18,20 +18,33 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 
 import { useAuth } from "./context/AuthContext";
 import type { NavPage, Student } from "./types";
+import api from "./services/api";
 
 // 1. We move your entire dashboard UI into a sub-component
 const DashboardLayout: React.FC = () => {
   const [active, setActive] = useState<NavPage>("dashboard");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
-  const [teacherName,    setTeacherName]    = useState("Loading...");
+  const [teacherName,    setTeacherName]    = useState("");
   const [teacherInitials,setTeacherInitials]= useState("");
   const [teacherPhoto,   setTeacherPhoto]   = useState<string | null>(null);
+
+  // Fetch name immediately on login so sidebar never shows blank/Loading
+  useEffect(() => {
+    api.get('/users/me/').then(res => {
+      const data = res.data;
+      const name = data.display_name || data.first_name || data.username || "Teacher";
+      const initials = name.substring(0, 2).toUpperCase();
+      setTeacherName(name);
+      setTeacherInitials(initials);
+    }).catch(() => {});
+  }, []);
 
   const renderPage = () => {
     switch (active) {
       case "dashboard": return <Dashboard setActive={setActive} setSelectedStudent={setSelectedStudent} />;
       case "students":  return <Students />;
+      case "messages":  return <Messages selected={selectedStudent} setSelected={setSelectedStudent} />;
       case "broadcast": return <Broadcast />;
       case "messages":  return selectedStudent ? <Messages selected={selectedStudent} setSelected={setSelectedStudent} /> : <Dashboard setActive={setActive} setSelectedStudent={setSelectedStudent} />;
       case "livecc":    return <LiveCC />;

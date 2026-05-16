@@ -6,7 +6,7 @@ import { useSignup } from "../../hooks/useSignup";
 
 export default function Signup() {
   const {
-    username, setUsername, // Changed from fullName
+    username, setUsername, 
     email, setEmail,
     password, setPassword,
     confirmPassword, setConfirmPassword,
@@ -97,12 +97,13 @@ export default function Signup() {
 
             <button className="primary-btn" type="submit">Sign Up</button>
 
-            <p className="bottom-text">
-              Already have an account? <Link to="/login">Sign In</Link>
-            </p>
-
-            <AuthFooter />
           </form>
+
+          <div style={{ textAlign: 'center', marginTop: 32, fontSize: '14px', color: '#666' }}>
+            Already have an account? <Link to="/login" style={{ color: '#0d9488', textDecoration: 'none', fontWeight: 600 }}>Sign In</Link>
+          </div>
+
+          <AuthFooter />
         </div>
       }
     />
