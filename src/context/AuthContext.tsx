@@ -77,16 +77,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error('Access Denied: This web portal is for Teachers only. Please use the mobile app.');
       }
 
-      // 3. Save the real tokens from Django
+      const token = data.access_token;
+
+      // Clear BOTH storages first to remove any stale tokens
+      localStorage.removeItem('access_token');
+      sessionStorage.removeItem('access_token');
+
+      // Save fresh token to the correct storage
       if (remember) {
-        localStorage.setItem('access_token', data.access);
-        localStorage.setItem('refresh_token', data.refresh);
+        localStorage.setItem('access_token', token);
       } else {
-        sessionStorage.setItem('access_token', data.access);
+        sessionStorage.setItem('access_token', token);
       }
 
-      // 4. Update state
-      setToken(data.access);
+      setToken(token);
       setUser({ identifier } as any); 
 
     } catch (error) {
