@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Colors as C, FontSize, Radius } from "../styles/tokens";
-import { Card, CardTitle, Button, ProgressBar, Divider } from "../components/ui";
+import { Divider } from "../components/ui";
 import Icon from "../components/ui/Icon";
 import api from "../services/api";
 
@@ -18,33 +18,29 @@ interface StudentActivity {
 }
 
 const Broadcast: React.FC = () => {
-  const [recording, setRecording]     = useState(false);
-  const [transcript, setTranscript]   = useState("");
-  const [sending, setSending]         = useState(false);
-  const [sent, setSent]               = useState(false);
-  const [error, setError]             = useState("");
-  const [sttSupported]                = useState(!!SpeechRecognition);
+  const [recording, setRecording] = useState(false);
+  const [liveText,  setLiveText]  = useState("");
+  const [error,     setError]     = useState("");
+  const [sttSupported]            = useState(!!SpeechRecognition);
 
-  // ── Session state ──────────────────────────────────────────────────────────
-  const [sessionActive, setSessionActive]     = useState(false);
-  const [sessionCode,   setSessionCode]       = useState<string | null>(null);
+  const [sessionActive,   setSessionActive]   = useState(false);
+  const [sessionCode,     setSessionCode]     = useState<string | null>(null);
   const [togglingSession, setTogglingSession] = useState(false);
 
-  // ── Live feed state ────────────────────────────────────────────────────────
   const [sentLines,       setSentLines]       = useState<string[]>([]);
   const [studentActivity, setStudentActivity] = useState<StudentActivity[]>([]);
+  const [manualText,      setManualText]      = useState("");
+
   const lastReplyIdRef  = useRef(0);
   const lastIconIdRef   = useRef(0);
   const activityRef     = useRef<HTMLDivElement>(null);
 
-  // ── Refs that bridge state into speech callbacks ───────────────────────────
-  const recognitionRef        = useRef<any>(null);
-  const isRecordingRef        = useRef(false);
-  const currentTranscriptRef  = useRef("");   // interim text being spoken right now
-  const sessionActiveRef      = useRef(sessionActive);
+  const recognitionRef       = useRef<any>(null);
+  const isRecordingRef       = useRef(false);
+  const currentTranscriptRef = useRef("");
+  const sessionActiveRef     = useRef(sessionActive);
   useEffect(() => { sessionActiveRef.current = sessionActive; }, [sessionActive]);
 
-  // ── On mount: restore session state ──────────────────────────────────────
   useEffect(() => {
     api.get("/sessions/teacher").then(res => {
       setSessionActive(res.data.active);
@@ -52,7 +48,6 @@ const Broadcast: React.FC = () => {
     }).catch(() => {});
   }, []);
 
-  // ── Poll student replies + icon taps every 2 s ────────────────────────────
   useEffect(() => {
     if (!sessionActive) {
       setStudentActivity([]);
@@ -60,69 +55,51 @@ const Broadcast: React.FC = () => {
       lastIconIdRef.current  = 0;
       return;
     }
-
     const pollReplies = () => {
       api.get(`/messages/my-students?since=${lastReplyIdRef.current}`)
         .then(res => {
           const msgs: any[] = res.data;
           if (!msgs.length) return;
           const entries: StudentActivity[] = msgs.map(m => ({
-            id:           `reply-${m.id}`,
-            type:         "reply" as const,
-            time:         m.sent_at || "",
-            student_name: m.student_name || "Student",
-            text:         m.text,
+            id: `reply-${m.id}`, type: "reply" as const,
+            time: m.sent_at || "", student_name: m.student_name || "Student", text: m.text,
           }));
           setStudentActivity(prev =>
             [...prev, ...entries].sort((a, b) => a.time.localeCompare(b.time))
           );
           lastReplyIdRef.current = msgs[msgs.length - 1].id;
-        })
-        .catch(() => {});
+        }).catch(() => {});
     };
-
     const pollIcons = () => {
       api.get("/sessions/logs/")
         .then(res => {
-          const logs: any[] = res.data;
-          const newLogs = logs.filter(l => l.id > lastIconIdRef.current);
+          const newLogs: any[] = (res.data as any[]).filter(l => l.id > lastIconIdRef.current);
           if (!newLogs.length) return;
           const entries: StudentActivity[] = newLogs.map(l => ({
-            id:           `icon-${l.id}`,
-            type:         "icon" as const,
-            time:         l.tapped_at || "",
-            student_name: l.student_name || "Student",
-            text:         l.message || l.icon_label,
+            id: `icon-${l.id}`, type: "icon" as const,
+            time: l.tapped_at || "", student_name: l.student_name || "Student",
+            text: l.message || l.icon_label,
           }));
           setStudentActivity(prev =>
             [...prev, ...entries].sort((a, b) => a.time.localeCompare(b.time))
           );
           lastIconIdRef.current = newLogs[newLogs.length - 1].id;
-        })
-        .catch(() => {});
+        }).catch(() => {});
     };
-
-    pollReplies();
-    pollIcons();
+    pollReplies(); pollIcons();
     const iv = setInterval(() => { pollReplies(); pollIcons(); }, 2000);
     return () => clearInterval(iv);
   }, [sessionActive]);
 
-  // Auto-scroll student activity to bottom
   useEffect(() => {
     if (activityRef.current)
       activityRef.current.scrollTop = activityRef.current.scrollHeight;
   }, [studentActivity.length]);
 
-  // Cleanup on unmount
   useEffect(() => {
-    return () => {
-      isRecordingRef.current = false;
-      recognitionRef.current?.stop();
-    };
+    return () => { isRecordingRef.current = false; recognitionRef.current?.stop(); };
   }, []);
 
-  // ── Session toggle ─────────────────────────────────────────────────────────
   const toggleSession = async () => {
     setTogglingSession(true);
     try {
@@ -131,7 +108,6 @@ const Broadcast: React.FC = () => {
       setSessionActive(nowActive);
       setSessionCode(res.data.session_code || null);
       if (!nowActive) {
-        // New session will be fresh — reset everything
         setSentLines([]);
         setStudentActivity([]);
         lastReplyIdRef.current = 0;
@@ -142,79 +118,53 @@ const Broadcast: React.FC = () => {
     setTogglingSession(false);
   };
 
-  // ── Auto-broadcast: continuous=false so each utterance fires onend ─────────
-  //
-  //  Flow:
-  //    startRecording() → recognition.start()
-  //    user speaks → onresult keeps updating currentTranscriptRef (interim)
-  //    user pauses → Chrome stops the recognizer → onend fires
-  //    onend → broadcast the utterance → restart recognition → repeat
-  //    stopRecording() → isRecordingRef=false → onend skips restart
-  //
   const startRecording = () => {
-    if (!SpeechRecognition) {
-      setError("Speech recognition is not supported. Please use Google Chrome.");
-      return;
-    }
-    if (!sessionActiveRef.current) {
-      setError("Start a class session first, then tap the mic to broadcast.");
-      return;
-    }
-
-    isRecordingRef.current = true;
+    if (!SpeechRecognition) { setError("Requires Google Chrome or Edge."); return; }
+    if (!sessionActiveRef.current) { setError("Start a session first."); return; }
+    isRecordingRef.current       = true;
     currentTranscriptRef.current = "";
     setRecording(true);
-    setSent(false);
     setError("");
 
     const recognition = new SpeechRecognition();
-    recognitionRef.current = recognition;
-    recognition.continuous     = false;   // each utterance is one unit
+    recognitionRef.current     = recognition;
+    recognition.continuous     = false;
     recognition.interimResults = true;
     recognition.lang           = "en-US";
 
     recognition.onresult = (event: any) => {
       let text = "";
-      for (let i = 0; i < event.results.length; i++) {
+      for (let i = 0; i < event.results.length; i++)
         text += event.results[i][0].transcript;
-      }
       currentTranscriptRef.current = text;
-      setTranscript(text);
+      setLiveText(text);
     };
 
     recognition.onerror = (event: any) => {
-      // "no-speech", "network", "aborted" are transient — onend will restart
       if (["no-speech", "network", "aborted"].includes(event.error)) return;
-      setError(`Mic error: ${event.error}. Check browser microphone permissions.`);
+      setError(`Mic error: ${event.error}`);
       isRecordingRef.current = false;
       setRecording(false);
     };
 
     recognition.onend = () => {
-      const textToBroadcast = currentTranscriptRef.current.trim();
+      const text = currentTranscriptRef.current.trim();
       currentTranscriptRef.current = "";
-      setTranscript("");
-
-      // Broadcast the captured utterance
-      if (textToBroadcast && isRecordingRef.current) {
-        api.post("/broadcast/", { text: textToBroadcast, speaker: "teacher" })
-          .then(() => setSentLines(prev => [...prev.slice(-9), textToBroadcast]))
-          .catch(() => setError("Broadcast failed — is the class session still active?"));
+      setLiveText("");
+      if (text && isRecordingRef.current) {
+        api.post("/broadcast/", { text, speaker: "teacher" })
+          .then(() => setSentLines(prev => [...prev.slice(-29), text]))
+          .catch(() => setError("Broadcast failed — is the session still active?"));
       }
-
-      // Restart immediately for the next utterance
       if (isRecordingRef.current) {
-        setTimeout(() => {
-          try { recognition.start(); } catch {}
-        }, 150);
+        setTimeout(() => { try { recognition.start(); } catch {} }, 150);
       } else {
         setRecording(false);
       }
     };
 
-    try {
-      recognition.start();
-    } catch {
+    try { recognition.start(); }
+    catch {
       setError("Could not access microphone. Refresh and try again.");
       isRecordingRef.current = false;
       setRecording(false);
@@ -225,144 +175,181 @@ const Broadcast: React.FC = () => {
     isRecordingRef.current       = false;
     currentTranscriptRef.current = "";
     recognitionRef.current?.stop();
-    setTranscript("");
+    setLiveText("");
     setRecording(false);
   };
 
-  const handleToggle = () => {
-    if (recording) stopRecording();
-    else startRecording();
-  };
-
-  // Manual broadcast for typed text
-  const handleBroadcast = async () => {
-    if (!transcript.trim()) return;
-    if (recording) stopRecording();
-    setSending(true);
-    setError("");
+  const handleManualSend = async () => {
+    const text = manualText.trim();
+    if (!text) return;
+    setManualText("");
     try {
-      await api.post("/broadcast/", { text: transcript.trim(), speaker: "teacher" });
-      setSentLines(prev => [...prev.slice(-9), transcript.trim()]);
-      setSent(true);
-      setTranscript("");
-      setTimeout(() => setSent(false), 3000);
+      await api.post("/broadcast/", { text, speaker: "teacher" });
+      setSentLines(prev => [...prev.slice(-29), text]);
     } catch {
-      setError("Failed to broadcast. Check that a session is active.");
-    } finally {
-      setSending(false);
+      setError("Broadcast failed — is the session still active?");
     }
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
-      {/* Browser warning */}
       {!isChromium && (
         <div style={{
-          padding: "12px 18px", borderRadius: Radius.md,
+          padding: "10px 16px", borderRadius: Radius.md,
           background: "#FEF3C7", border: "1px solid #FCD34D",
-          display: "flex", alignItems: "center", gap: 10,
           fontSize: FontSize.sm, color: "#92400E", fontWeight: 500,
         }}>
-          <span style={{ fontSize: 20 }}>⚠️</span>
-          <span>
-            <strong>Voice input requires Chrome or Edge.</strong>{" "}
-            Please switch to <strong>Google Chrome</strong> for the mic to work.
-          </span>
+          ⚠️ <strong>Voice requires Chrome or Edge.</strong>
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 16 }}>
+      {/* ── Session bar ── */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 10,
+        padding: "10px 16px", borderRadius: Radius.md,
+        background: sessionActive ? "rgba(34,197,94,0.08)" : C.gray,
+        border: `1px solid ${sessionActive ? "rgba(34,197,94,0.3)" : C.gray2}`,
+      }}>
+        <div style={{
+          width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
+          background: sessionActive ? "#22C55E" : C.gray3,
+          boxShadow: sessionActive ? "0 0 0 3px rgba(34,197,94,0.2)" : "none",
+        }} />
+        <span style={{ flex: 1, fontSize: FontSize.sm, fontWeight: 600, color: sessionActive ? "#15803D" : C.text2 }}>
+          {sessionActive
+            ? <>Active &nbsp;·&nbsp; <span style={{ fontFamily: "monospace", letterSpacing: 2 }}>{sessionCode}</span></>
+            : "No active session"}
+        </span>
+        <button
+          onClick={toggleSession}
+          disabled={togglingSession}
+          style={{
+            padding: "6px 14px", borderRadius: Radius.sm, border: "none",
+            cursor: togglingSession ? "not-allowed" : "pointer",
+            fontWeight: 600, fontSize: FontSize.xs,
+            background: sessionActive ? "#DC2626" : C.teal,
+            color: "#fff", opacity: togglingSession ? 0.6 : 1,
+          }}
+        >
+          {togglingSession ? "…" : sessionActive ? "⏹ End Session" : "▶ Start Session"}
+        </button>
+      </div>
 
-        {/* ── Main panel ── */}
-        <Card style={{ flex: 1 }}>
-          <CardTitle>Speech-to-Text Broadcast</CardTitle>
-          <p style={{ fontSize: FontSize.sm, color: C.text3, marginBottom: 20, lineHeight: 1.6 }}>
-            {sessionActive
-              ? <>Tap the mic and speak. Every sentence is <strong>automatically broadcast</strong> to students the moment you pause — no button needed.</>
-              : <>Start a session first, then tap the mic to begin broadcasting.</>}
-          </p>
+      {/* ── Main two-column layout ── */}
+      <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
 
-          {/* Mic button */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "20px 0" }}>
+        {/* ── Left: narrow control strip ── */}
+        <div style={{
+          width: 220, flexShrink: 0,
+          display: "flex", flexDirection: "column", gap: 12,
+        }}>
+
+          {/* Mic button — compact */}
+          <div style={{
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+            padding: "20px 12px",
+            background: recording ? "#1a1a2e" : C.white,
+            borderRadius: Radius.md,
+            border: `1px solid ${recording ? "#4a4a7a" : C.gray2}`,
+            transition: "all 0.2s",
+          }}>
             <button
-              onClick={handleToggle}
+              onClick={recording ? stopRecording : startRecording}
               disabled={!sttSupported || (!sessionActive && !recording)}
+              title={recording ? "Mute" : "Unmute"}
               style={{
-                width: 72, height: 72, borderRadius: "50%", border: "none",
-                background: recording ? C.redDark : sessionActive ? C.teal : C.gray3,
-                cursor: (sttSupported && (sessionActive || recording)) ? "pointer" : "not-allowed",
+                width: 56, height: 56, borderRadius: "50%", border: "none",
+                background: recording
+                  ? "linear-gradient(135deg,#E24B4A,#c0392b)"
+                  : sessionActive
+                  ? `linear-gradient(135deg,${C.teal},${C.tealMid})`
+                  : C.gray3,
+                cursor: sttSupported && (sessionActive || recording) ? "pointer" : "not-allowed",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 boxShadow: recording
-                  ? `0 0 0 10px rgba(226,75,74,0.12), 0 0 0 20px rgba(226,75,74,0.06)`
-                  : sessionActive ? `0 0 0 8px ${C.tealLight}` : "none",
+                  ? "0 0 0 8px rgba(226,75,74,0.18),0 0 0 16px rgba(226,75,74,0.07)"
+                  : sessionActive ? `0 0 0 6px ${C.tealLight}` : "none",
                 transition: "all 0.2s",
-                opacity: (sttSupported && (sessionActive || recording)) ? 1 : 0.5,
               }}
             >
-              {recording
-                ? <Icon name="stop" size={24} color={C.white} />
-                : <Icon name="mic"  size={24} color={C.white} />
-              }
+              <Icon name={recording ? "mic-off" : "mic"} size={24} color="#fff" />
             </button>
 
-            <div style={{ fontSize: FontSize.base, fontWeight: 500, color: recording ? C.redDark : C.text2 }}>
-              {!sttSupported
-                ? "Use Chrome for voice input"
-                : !sessionActive && !recording
-                ? "Start a session above to enable mic"
-                : recording
-                ? "🎙 Listening… pausing broadcasts each sentence"
-                : "Tap mic to start auto-broadcasting"}
+            <div style={{
+              fontSize: FontSize.xs, fontWeight: 700, textAlign: "center",
+              color: recording ? "#fff" : sessionActive ? C.text2 : C.text3,
+            }}>
+              {recording ? "🔴 Live" : sessionActive ? "Tap to go live" : "Start session first"}
             </div>
 
-            {recording && (
-              <div style={{ width: "60%" }}>
-                <ProgressBar value={65} color={C.tealMid} />
+            {recording && liveText && (
+              <div style={{
+                fontSize: 11, color: "rgba(255,255,255,0.65)",
+                fontStyle: "italic", textAlign: "center", lineHeight: 1.4,
+              }}>
+                "{liveText}"
               </div>
             )}
           </div>
 
-          {/* Live interim transcript */}
-          <div style={{ marginTop: 8 }}>
-            <div style={{ fontSize: FontSize.sm, fontWeight: 600, color: C.text3, marginBottom: 8 }}>
-              {recording
-                ? <span>Now hearing <span style={{ color: C.teal }}>● Auto-broadcasting on pause</span></span>
-                : "Or type here to broadcast manually"}
+          {/* Error */}
+          {error && (
+            <div style={{
+              padding: "8px 12px", background: "#FEF2F2",
+              borderRadius: Radius.sm, fontSize: 11, color: C.red,
+            }}>
+              ⚠ {error}
             </div>
-            <textarea
-              value={transcript}
-              onChange={e => setTranscript(e.target.value)}
-              placeholder={
-                recording
-                  ? "Speak now… text appears here, sends automatically when you pause."
-                  : "Type here and click Broadcast, or use the mic above."
-              }
-              rows={3}
-              style={{
-                width: "100%", boxSizing: "border-box",
-                background: recording ? "#F0FDF9" : C.gray,
-                borderRadius: Radius.md, padding: "10px 14px", minHeight: 70,
-                fontSize: 13, lineHeight: 1.7, color: C.text2,
-                border: `1px solid ${recording ? C.teal : C.gray2}`,
-                outline: "none", resize: "vertical", fontFamily: "inherit",
-                transition: "all 0.2s",
-              }}
-            />
-          </div>
+          )}
 
-          {/* Recently auto-broadcast log */}
+          {/* Type to send */}
+          {sessionActive && (
+            <div style={{
+              background: C.white, borderRadius: Radius.md,
+              border: `1px solid ${C.gray2}`, overflow: "hidden",
+            }}>
+              <input
+                value={manualText}
+                onChange={e => setManualText(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleManualSend()}
+                placeholder="Type + Enter to send…"
+                style={{
+                  width: "100%", boxSizing: "border-box",
+                  border: "none", outline: "none", padding: "9px 12px",
+                  fontSize: FontSize.xs, color: C.text,
+                  background: "transparent", fontFamily: "inherit",
+                }}
+              />
+              {manualText.trim() && (
+                <div style={{ borderTop: `1px solid ${C.gray2}` }}>
+                  <button
+                    onClick={handleManualSend}
+                    style={{
+                      width: "100%", border: "none", padding: "7px",
+                      background: C.teal, color: "#fff",
+                      fontSize: FontSize.xs, fontWeight: 700, cursor: "pointer",
+                    }}
+                  >
+                    Send
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Recent broadcasts */}
           {sentLines.length > 0 && (
-            <div style={{ marginTop: 12 }}>
-              <div style={{ fontSize: FontSize.xs, fontWeight: 600, color: C.text3, marginBottom: 6 }}>
-                ✅ Recently broadcast ({sentLines.length})
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: C.text3, marginBottom: 6 }}>
+                ✅ Sent this session
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 130, overflowY: "auto" }}>
-                {sentLines.map((line, i) => (
+              <div style={{ display: "flex", flexDirection: "column", gap: 3, maxHeight: 220, overflowY: "auto" }}>
+                {[...sentLines].reverse().map((line, i) => (
                   <div key={i} style={{
-                    padding: "6px 10px", borderRadius: Radius.sm,
+                    padding: "5px 9px", borderRadius: Radius.sm,
                     background: C.tealLight, border: `1px solid ${C.tealBorder}`,
-                    fontSize: FontSize.xs, color: "#085041", lineHeight: 1.5,
+                    fontSize: 11, color: "#085041", lineHeight: 1.5,
                   }}>
                     {line}
                   </div>
@@ -371,172 +358,140 @@ const Broadcast: React.FC = () => {
             </div>
           )}
 
-          {/* Error */}
-          {error && (
-            <div style={{
-              marginTop: 10, padding: "10px 14px",
-              background: "#FEF2F2", borderRadius: Radius.md,
-              fontSize: FontSize.sm, color: C.red,
-            }}>
-              ⚠ {error}
+          {/* How it works */}
+          {!sessionActive && !sentLines.length && (
+            <div style={{ fontSize: 11, color: C.text3, lineHeight: 1.7 }}>
+              1. Start a session<br />
+              2. Tap the mic to go live<br />
+              3. Each sentence auto-broadcasts<br />
+              4. Tap again to mute<br /><br />
+              💡 Use <strong>Chrome</strong>.
             </div>
           )}
+        </div>
 
-          {/* Success */}
-          {sent && (
+        {/* ── Right: student responses — dominates the space ── */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            background: C.white, borderRadius: Radius.md,
+            border: `1px solid ${C.gray2}`, overflow: "hidden",
+            minHeight: 520,
+          }}>
+            {/* Header */}
             <div style={{
-              display: "flex", alignItems: "center", gap: 8,
-              marginTop: 14, padding: "10px 14px",
-              background: C.tealLight, borderRadius: Radius.md,
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "16px 20px", borderBottom: `1px solid ${C.gray2}`,
             }}>
-              <Icon name="check" size={14} color={C.teal} />
-              <span style={{ fontSize: FontSize.sm, color: C.teal, fontWeight: 500 }}>
-                ✅ Broadcast sent! Students see it within 2 seconds.
-              </span>
-            </div>
-          )}
-
-          {/* Manual broadcast button */}
-          <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-            <Button
-              variant="primary"
-              onClick={handleBroadcast}
-              disabled={!transcript.trim() || sending}
-              style={{ flex: 1 }}
-            >
-              {sending ? "Sending..." : "📡 Broadcast to students"}
-            </Button>
-            <Button
-              onClick={() => setTranscript("")}
-              disabled={!transcript.trim() || recording}
-              style={{ flex: 1 }}
-            >
-              Clear
-            </Button>
-          </div>
-        </Card>
-
-        {/* ── Right column ── */}
-        <div style={{ width: 280, display: "flex", flexDirection: "column", gap: 14 }}>
-
-          {/* Session control */}
-          <Card>
-            <CardTitle>Class Session</CardTitle>
-            <div style={{
-              padding: "12px 14px", borderRadius: Radius.md, marginBottom: 12,
-              background: sessionActive ? "rgba(34,197,94,0.08)" : C.gray,
-              border: `1px solid ${sessionActive ? "rgba(34,197,94,0.3)" : C.gray2}`,
-              display: "flex", alignItems: "center", gap: 8,
-            }}>
-              <div style={{
-                width: 8, height: 8, borderRadius: "50%",
-                background: sessionActive ? "#22C55E" : C.gray3,
-                boxShadow: sessionActive ? "0 0 0 3px rgba(34,197,94,0.25)" : "none",
-              }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: FontSize.sm, fontWeight: 600, color: sessionActive ? "#15803D" : C.text2 }}>
-                  {sessionActive ? "Session Active" : "No Active Session"}
+              <div>
+                <div style={{ fontSize: FontSize.lg, fontWeight: 800, color: C.text }}>
+                  Student Responses
                 </div>
-                {sessionCode && (
-                  <div style={{ fontSize: FontSize.xs, color: C.text3, marginTop: 2 }}>
-                    Code: <strong>{sessionCode}</strong>
-                  </div>
-                )}
+                <div style={{ fontSize: FontSize.xs, color: C.text3, marginTop: 2 }}>
+                  Typed replies and icon taps appear here in real time
+                </div>
               </div>
-            </div>
-            <Button
-              variant={sessionActive ? "danger" : "primary"}
-              onClick={toggleSession}
-              disabled={togglingSession}
-              style={{ width: "100%", justifyContent: "center" }}
-            >
-              {togglingSession ? "..." : sessionActive ? "⏹ End Session" : "▶ Start Session"}
-            </Button>
-          </Card>
-
-          {/* Live student responses */}
-          {sessionActive && (
-            <Card style={{ flex: 1 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <CardTitle>Student Responses</CardTitle>
+              {sessionActive && (
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#22C55E", boxShadow: "0 0 0 3px rgba(34,197,94,0.25)" }} />
-                  <span style={{ fontSize: FontSize.xs, color: "#15803D", fontWeight: 600 }}>Live</span>
-                </div>
-              </div>
-
-              {studentActivity.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "20px 0", color: C.text3, fontSize: FontSize.sm }}>
-                  Waiting for students to respond…
-                </div>
-              ) : (
-                <div
-                  ref={activityRef}
-                  style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 360, overflowY: "auto" }}
-                >
-                  {studentActivity.map(item => (
-                    <div key={item.id} style={{
-                      display: "flex", alignItems: "flex-start", gap: 10,
-                      padding: "8px 10px", borderRadius: Radius.md,
-                      background: item.type === "reply" ? C.purpleLight : C.gray,
-                      border: `1px solid ${C.gray2}`,
-                    }}>
-                      <div style={{
-                        width: 30, height: 30, borderRadius: Radius.sm, flexShrink: 0,
-                        background: item.type === "reply" ? C.tealLight : C.gray,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 16,
-                      }}>
-                        {item.type === "reply" ? "💬" : "🗣"}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: FontSize.xs, fontWeight: 700, color: C.text, marginBottom: 2 }}>
-                          {item.student_name}
-                          <span style={{ fontWeight: 400, color: C.text3, marginLeft: 6 }}>
-                            · {item.time.slice(11, 16)}
-                          </span>
-                        </div>
-                        <div style={{ fontSize: FontSize.sm, color: C.text2, lineHeight: 1.4, wordBreak: "break-word" }}>
-                          {item.text}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                  <div style={{
+                    width: 8, height: 8, borderRadius: "50%",
+                    background: "#22C55E", boxShadow: "0 0 0 3px rgba(34,197,94,0.25)",
+                  }} />
+                  <span style={{ fontSize: FontSize.sm, color: "#15803D", fontWeight: 700 }}>Live</span>
                 </div>
               )}
-            </Card>
-          )}
+            </div>
 
-          {/* How it works (when no session) */}
-          {!sessionActive && (
-            <Card>
-              <CardTitle>How it works</CardTitle>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {[
-                  { step: "1", text: "Start a session above" },
-                  { step: "2", text: "Tap the mic — each sentence auto-broadcasts" },
-                  { step: "3", text: "Students reply via icons or text" },
-                  { step: "4", text: "Their responses appear here live" },
-                ].map(item => (
-                  <div key={item.step} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+            {/* Body */}
+            {!sessionActive ? (
+              <div style={{
+                display: "flex", flexDirection: "column", alignItems: "center",
+                justifyContent: "center", gap: 12, padding: "80px 20px",
+                color: C.text3, textAlign: "center",
+              }}>
+                <div style={{ fontSize: 48 }}>🎓</div>
+                <div style={{ fontSize: FontSize.base, fontWeight: 600, color: C.text2 }}>
+                  Start a session to see responses
+                </div>
+                <div style={{ fontSize: FontSize.sm }}>
+                  Students will send replies via icons and text once a session is active.
+                </div>
+              </div>
+            ) : studentActivity.length === 0 ? (
+              <div style={{
+                display: "flex", flexDirection: "column", alignItems: "center",
+                justifyContent: "center", gap: 10, padding: "80px 20px",
+                color: C.text3, textAlign: "center",
+              }}>
+                <div style={{ fontSize: 40 }}>👂</div>
+                <div style={{ fontSize: FontSize.base, fontWeight: 600, color: C.text2 }}>
+                  Waiting for students…
+                </div>
+                <div style={{ fontSize: FontSize.sm }}>
+                  Responses appear here instantly when students tap icons or send messages.
+                </div>
+              </div>
+            ) : (
+              <div
+                ref={activityRef}
+                style={{ display: "flex", flexDirection: "column", overflowY: "auto", maxHeight: 580 }}
+              >
+                {studentActivity.map((item, idx) => (
+                  <div key={item.id} style={{
+                    display: "flex", alignItems: "flex-start", gap: 14,
+                    padding: "16px 20px",
+                    borderBottom: idx < studentActivity.length - 1 ? `1px solid ${C.gray2}` : "none",
+                    background: item.type === "reply" ? C.purpleLight : C.white,
+                  }}>
+                    {/* Avatar */}
                     <div style={{
-                      width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                      background: C.teal, color: C.white,
+                      width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
+                      background: item.type === "reply" ? C.purple : C.tealLight,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 11, fontWeight: 700,
+                      fontSize: 22,
                     }}>
-                      {item.step}
+                      {item.type === "reply" ? "💬" : "🗣"}
                     </div>
-                    <span style={{ fontSize: FontSize.sm, color: C.text2, lineHeight: 1.5 }}>{item.text}</span>
+
+                    {/* Content */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        display: "flex", alignItems: "baseline", gap: 8, marginBottom: 5,
+                      }}>
+                        <span style={{
+                          fontSize: FontSize.base, fontWeight: 700,
+                          color: item.type === "reply" ? C.purple : C.teal,
+                        }}>
+                          {item.student_name}
+                        </span>
+                        <span style={{ fontSize: FontSize.xs, color: C.text3 }}>
+                          {item.time.slice(11, 16)}
+                        </span>
+                        <span style={{
+                          marginLeft: "auto",
+                          fontSize: 11, fontWeight: 700, padding: "2px 8px",
+                          borderRadius: 999,
+                          background: item.type === "reply" ? C.purpleLight : C.tealLight,
+                          color: item.type === "reply" ? C.purple : C.teal,
+                          border: `1px solid ${item.type === "reply" ? C.purpleMid : C.tealBorder}`,
+                        }}>
+                          {item.type === "reply" ? "Reply" : "AAC"}
+                        </span>
+                      </div>
+                      <div style={{
+                        fontSize: FontSize.lg,
+                        fontWeight: 500,
+                        color: C.text,
+                        lineHeight: 1.45,
+                        wordBreak: "break-word",
+                      }}>
+                        {item.text}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
-              <Divider style={{ margin: "12px 0" }} />
-              <div style={{ fontSize: FontSize.xs, color: C.text3, lineHeight: 1.6 }}>
-                💡 Use <strong>Chrome</strong> for voice recognition.
-              </div>
-            </Card>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

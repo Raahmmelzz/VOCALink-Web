@@ -218,7 +218,7 @@ const LiveCC: React.FC = () => {
                     {entry.type === "reply" && <span style={{ marginRight: 4 }}>💬</span>}
                     {entry.speaker}
                   </div>
-                  <div style={{ fontSize: 13, lineHeight: 1.55, color: textColor }}>
+                  <div style={{ fontSize: entry.type === "reply" ? 15 : 13, lineHeight: 1.55, color: textColor }}>
                     {entry.text}
                   </div>
                 </div>
