@@ -30,6 +30,12 @@ export const useLogin = () => {
     } catch (err: any) {
       const detail = err?.message || "";
       if (detail === "EMAIL_NOT_VERIFIED") {
+        // Trigger a fresh code before redirecting so the user gets an email
+        fetch("https://vocalink-fastapi.onrender.com/api/auth/resend-verification/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: identifier }),
+        }).catch(() => {});
         navigate(`/verify-email?email=${encodeURIComponent(identifier)}`);
         return;
       }

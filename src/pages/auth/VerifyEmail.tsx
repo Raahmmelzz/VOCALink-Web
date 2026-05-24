@@ -1,21 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import AuthLayout   from "../../components/layout/AuthLayout";
 import AuthBranding from "../../components/layout/AuthBranding";
 import AuthFooter   from "../../components/layout/AuthFooter";
 
 const API = "https://vocalink-fastapi.onrender.com/api/auth";
+const RESEND_COOLDOWN = 60;
 
 export default function VerifyEmail() {
   const [params]    = useSearchParams();
   const navigate    = useNavigate();
   const email       = params.get("email") || "";
-  const [code, setCode]       = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState("");
-  const [done, setDone]       = useState(false);
+  const debugCode   = params.get("code")  || "";
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const [code, setCode]           = useState(debugCode);
+  const [loading, setLoading]     = useState(false);
+  const [resending, setResending] = useState(false);
+  const [error, setError]         = useState("");
+  const [resendMsg, setResendMsg] = useState("");
+  const [done, setDone]           = useState(false);
+  const [cooldown, setCooldown]   = useState(0);
+
+  // Start cooldown timer
+  const startCooldown = useCallback(() => {
+    setCooldown(RESEND_COOLDOWN);
+  }, []);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  const onSubmit = async (e: { preventDefault(): void }) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -35,6 +52,27 @@ export default function VerifyEmail() {
     }
   };
 
+  const onResend = async () => {
+    setResendMsg("");
+    setError("");
+    setResending(true);
+    try {
+      const res = await fetch(`${API}/resend-verification/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || "Could not resend. Try again.");
+      setResendMsg("A new code has been sent to your email.");
+      startCooldown();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setResending(false);
+    }
+  };
+
   return (
     <AuthLayout
       left={<AuthBranding description="Empowering teachers to connect with nonverbal students through seamless communication." />}
@@ -46,7 +84,8 @@ export default function VerifyEmail() {
             Enter it below to activate your account.
           </p>
 
-          {error && <div className="alert">{error}</div>}
+          {error     && <div className="alert">{error}</div>}
+          {resendMsg && <div className="alert alert-success">{resendMsg}</div>}
 
           {done ? (
             <div style={{ textAlign: "center", padding: "20px 0" }}>
@@ -82,6 +121,27 @@ export default function VerifyEmail() {
               >
                 {loading ? "Verifying…" : "Verify Email"}
               </button>
+
+              {/* Resend */}
+              <div style={{ textAlign: "center", marginTop: 12 }}>
+                {cooldown > 0 ? (
+                  <span style={{ fontSize: 13, color: "#94A3B8" }}>
+                    Resend available in {cooldown}s
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onResend}
+                    disabled={resending}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer",
+                      fontSize: 13, color: "#0E8DB8", fontWeight: 600, textDecoration: "underline",
+                    }}
+                  >
+                    {resending ? "Sending…" : "Didn't receive a code? Resend"}
+                  </button>
+                )}
+              </div>
 
               <p className="bottom-text">
                 Wrong email? <Link to="/signup">Sign up again</Link>
