@@ -28,7 +28,12 @@ export const useLogin = () => {
       navigate("/dashboard");
       
     } catch (err: any) {
-      setError(err?.message || "Invalid email or password.");
+      const detail = err?.message || "";
+      if (detail === "EMAIL_NOT_VERIFIED") {
+        navigate(`/verify-email?email=${encodeURIComponent(identifier)}`);
+        return;
+      }
+      setError(detail || "Invalid email or password.");
     } finally {
       setLoading(false);
     }

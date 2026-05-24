@@ -32,7 +32,7 @@ export default function ForgotPassword() {
   return (
     <AuthLayout
       left={
-        <AuthBranding description="Empowering people to connect with deaf and mute individuals through seamless communication." />
+        <AuthBranding description="Empowering teachers to connect with nonverbal students through seamless communication." />
       }
       right={
         <div className="form-card">

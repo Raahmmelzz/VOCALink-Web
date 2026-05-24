@@ -24,30 +24,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signup = async (credentials: any) => {
     try {
-      // 1. Send the request to Django (No more random username generator!)
       const response = await fetch('https://vocalink-fastapi.onrender.com/api/auth/register/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: credentials.username, // <--- Now it uses the username they actually typed!
+          username: credentials.username,
           email: credentials.email,
           status: credentials.status,
           password: credentials.password,
-          // 💥 full_name has been completely deleted from here!
         }),
       });
 
+      const data = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Django rejected signup:", errorData);
-        throw new Error('Failed to create account. Email might already exist.');
+        const detail = data.detail || "";
+        if (detail.includes("already taken") || detail.includes("already exists")) {
+          throw new Error("Username or email is already taken. Please choose another.");
+        }
+        if (detail.includes("email") && detail.includes("valid")) {
+          throw new Error("Please enter a valid email address.");
+        }
+        throw new Error(detail || "Registration failed. Please try again.");
       }
 
-      console.log("User & Profile successfully saved!");
-    } catch (error) {
-      console.error("Signup failed:", error);
+      // Return auto_verified flag so the signup page can skip email verification
+      return data;
+    } catch (error: any) {
+      if (error.message === "Failed to fetch" || error.name === "TypeError") {
+        throw new Error("Cannot reach the server. Please check your internet connection and try again.");
+      }
       throw error;
     }
   };
@@ -67,7 +73,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Invalid email or password');
+        const errData = await response.json().catch(() => ({}));
+        const detail = errData.detail || "";
+        if (detail === "EMAIL_NOT_VERIFIED") throw new Error("EMAIL_NOT_VERIFIED");
+        if (detail.includes("credentials") || response.status === 401) throw new Error("Invalid email or password. Please try again.");
+        throw new Error(detail || "Login failed. Please try again.");
       }
 
       const data = await response.json();

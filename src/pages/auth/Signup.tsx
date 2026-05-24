@@ -12,7 +12,7 @@ export default function Signup() {
     confirmPassword, setConfirmPassword,
     showPass, toggleShowPass,
     showConfirm, toggleShowConfirm,
-    error, onSubmit,
+    error, loading, loadingMsg, success, onSubmit,
   } = useSignup();
 
   const EyeIcon = ({ open }: { open: boolean }) => open ? (
@@ -31,14 +31,15 @@ export default function Signup() {
   return (
     <AuthLayout
       left={
-        <AuthBranding description="Empowering people to connect with deaf and mute individuals through seamless communication." />
+        <AuthBranding description="Empowering teachers to connect with nonverbal students through seamless communication." />
       }
       right={
         <div className="form-card">
           <h2 className="form-title">Create Account</h2>
           <p className="form-desc">Sign up to get started with VocaLink</p>
 
-          {error && <div className="alert">{error}</div>}
+          {error   && <div className="alert">{error}</div>}
+          {success && <div className="alert alert-success">✅ {success}</div>}
 
           <form onSubmit={onSubmit} className="form">
   
@@ -52,7 +53,7 @@ export default function Signup() {
               required
             />
 
-            <label className="label">Email</label>
+            <label className="label">Email <span style={{ fontWeight: 400, color: "#94A3B8", fontSize: 11 }}>— must be real, a verification code will be sent</span></label>
             <input
               className="input"
               type="email"
@@ -95,7 +96,9 @@ export default function Signup() {
               </button>
             </div>
 
-            <button className="primary-btn" type="submit">Sign Up</button>
+            <button className="primary-btn" type="submit" disabled={loading || !!success}>
+              {loading ? loadingMsg : "Sign Up"}
+            </button>
 
           </form>
 
