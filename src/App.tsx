@@ -9,6 +9,7 @@ import Topbar         from "./components/layout/Topbar";
 import Dashboard      from "./pages/Dashboard";
 import Students       from "./pages/Students";
 import Broadcast      from "./pages/Broadcast";
+import Messages       from "./pages/Messages";
 import LiveCC         from "./pages/LiveCC";
 import Settings       from "./pages/Settings";
 import Login          from "./pages/auth/Login";
@@ -53,6 +54,7 @@ const DashboardLayout: React.FC = () => {
       case "dashboard": return <Dashboard setActive={setActive} setSelectedStudent={setSelectedStudent} />;
       case "students":  return <Students />;
       case "broadcast": return <Broadcast />;
+      case "messages":  return <Messages selected={selectedStudent} setSelected={setSelectedStudent} />;
       case "livecc":    return <LiveCC />;
       case "settings":  return (
         <Settings

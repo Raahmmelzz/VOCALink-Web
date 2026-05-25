@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Colors as C, FontSize, Radius, Shadow } from "../styles/tokens";
-import { Avatar, StatusDot, Badge, Button } from "../components/ui";
+import { Avatar, Badge, Button } from "../components/ui";
 import type { NavPage, Student } from "../types";
 import api from "../services/api";
 

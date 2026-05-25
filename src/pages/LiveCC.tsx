@@ -33,7 +33,6 @@ const LiveCC: React.FC = () => {
   const [selectedId,   setSelectedId]   = useState<number | null>(null);
   const [sessionLog,   setSessionLog]   = useState<SessionLog | null>(null);
   const [loading,      setLoading]      = useState(true);
-  const [sessLoading,  setSessLoading]  = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
 
   // ── Fetch session list once (and when it might change) ─────────────────────
@@ -65,8 +64,7 @@ const LiveCC: React.FC = () => {
   useEffect(() => {
     if (selectedId === null) return;
     setLoading(true);
-    setSessLoading(true);
-    fetchLog(selectedId).finally(() => setSessLoading(false));
+    fetchLog(selectedId);
     const iv = setInterval(() => fetchLog(selectedId), 3000);
     return () => clearInterval(iv);
   }, [selectedId]);
@@ -80,8 +78,6 @@ const LiveCC: React.FC = () => {
     }
     prevCount.current = count;
   }, [sessionLog?.entries?.length]);
-
-  const activeSession = sessions.find(s => s.is_active);
 
   return (
     <Card>
