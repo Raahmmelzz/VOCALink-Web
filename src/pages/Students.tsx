@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Colors as C, FontSize, Radius, Shadow } from "../styles/tokens";
+import { Colors as C, FontSize, Radius } from "../styles/tokens";
 import { Card, CardTitle, Avatar, StatusDot, Divider, Button } from "../components/ui";
 import type { StudentStatus } from "../types";
 import api from '../services/api';

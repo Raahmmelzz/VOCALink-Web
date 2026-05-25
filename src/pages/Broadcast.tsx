@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Colors as C, FontSize, Radius } from "../styles/tokens";
-import { Divider } from "../components/ui";
+import {} from "../components/ui";
 import Icon from "../components/ui/Icon";
 import api from "../services/api";
 

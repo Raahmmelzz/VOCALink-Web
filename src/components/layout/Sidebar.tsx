@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Colors as C, FontSize, Radius } from "../../styles/tokens";
-import { Badge } from "../ui";
+import {} from "../ui";
 import Icon from "../ui/Icon";
 import type { NavPage } from "../../types";
 import { useAuth } from "../../context/AuthContext";

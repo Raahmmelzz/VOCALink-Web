@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Colors as C, FontSize, Radius } from "../styles/tokens";
-import { Card, Avatar, CardTitle, StatusDot, Badge, Button } from "../components/ui";
+import { Card, Avatar, CardTitle, StatusDot, Button } from "../components/ui";
 import Icon from "../components/ui/Icon";
 import { QUICK_REPLIES } from "../data/mockData";
 import type { Student } from "../types";

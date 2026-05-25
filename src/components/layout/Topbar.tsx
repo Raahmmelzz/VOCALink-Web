@@ -1,6 +1,6 @@
 import React from "react";
 import { Colors as C, FontSize } from "../../styles/tokens";
-import { StatusDot } from "../ui";
+import {} from "../ui";
 import Icon from "../ui/Icon";
 import type { NavPage } from "../../types";
 
@@ -8,6 +8,7 @@ const PAGE_TITLES: Record<NavPage, { title: string; subtitle: string }> = {
   dashboard: { title: "Dashboard",     subtitle: "Overview of your classroom activity"  },
   students:  { title: "Students",      subtitle: "Manage your class roster"              },
   broadcast: { title: "STT Broadcast", subtitle: "Broadcast live captions to students"  },
+  messages:  { title: "Messages",      subtitle: "Student messages and replies"          },
   livecc:    { title: "Live CC Log",   subtitle: "Full session transcript"               },
   settings:  { title: "Settings",      subtitle: "Manage your profile and preferences"  },
 };
