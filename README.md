@@ -423,10 +423,10 @@ Live URL: `https://raahmmelzz.github.io/VOCALink-Rammel/`
 
 | Name | Role / Modules |
 |---|---|
-| *(Team member 1)* | *(Add role here)* |
-| *(Team member 2)* | *(Add role here)* |
-| *(Team member 3)* | *(Add role here)* |
-| *(Team member 4)* | *(Add role here)* |
+| *Olaco, Mark Aidel Ray D. | *Front End Developer* |
+| *Pacamo, Rammel | *Back End Developer* |
+| *Pantilgan Jon Marco F.* | *Database Administrator* |
+| *Rulona, Nick* | *Technical Writer* |
 
 ---
 
