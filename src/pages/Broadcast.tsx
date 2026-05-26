@@ -56,13 +56,13 @@ const Broadcast: React.FC = () => {
       return;
     }
     const pollReplies = () => {
-      api.get(`/messages/my-students?since=${lastReplyIdRef.current}`)
+      api.get(`/cc/messages/?since=${lastReplyIdRef.current}`)
         .then(res => {
-          const msgs: any[] = res.data;
+          const msgs: any[] = (res.data as any[]).filter(m => m.speaker === "student");
           if (!msgs.length) return;
           const entries: StudentActivity[] = msgs.map(m => ({
             id: `reply-${m.id}`, type: "reply" as const,
-            time: m.sent_at || "", student_name: m.student_name || "Student", text: m.text,
+            time: m.sent_at || "", student_name: "Student", text: m.text,
           }));
           setStudentActivity(prev =>
             [...prev, ...entries].sort((a, b) => a.time.localeCompare(b.time))
