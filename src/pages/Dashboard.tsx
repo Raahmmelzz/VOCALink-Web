@@ -22,7 +22,6 @@ function displayName(s: { first_name: string; last_name: string; username: strin
 
 interface DashboardProps {
   setActive: (page: NavPage) => void;
-  setSelectedStudent: (student: Student) => void;
 }
 
 const StatCard: React.FC<{
@@ -107,7 +106,7 @@ const QuickAction: React.FC<{
   );
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ setActive, setSelectedStudent }) => {
+const Dashboard: React.FC<DashboardProps> = ({ setActive }) => {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState("");
@@ -262,7 +261,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActive, setSelectedStudent }) 
             {students.map((s, i) => (
               <div
                 key={s.id}
-                onClick={() => { setSelectedStudent(s); setActive("messages"); }}
+                onClick={() => { setActive("students"); }}
                 style={{
                   display: "flex", alignItems: "center", gap: 14,
                   padding: "12px 20px", cursor: "pointer",
@@ -324,13 +323,6 @@ const Dashboard: React.FC<DashboardProps> = ({ setActive, setSelectedStudent }) 
                 icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>}
                 label="STT Broadcast"
                 sub="Speak to all students"
-              />
-              <QuickAction
-                onClick={() => setActive("messages")}
-                gradient="linear-gradient(135deg, #8B5CF6, #6D28D9)"
-                icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>}
-                label="Messages"
-                sub="View student messages"
               />
               <QuickAction
                 onClick={() => setActive("livecc")}

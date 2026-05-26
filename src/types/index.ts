@@ -29,7 +29,6 @@ export type NavPage =
   | "dashboard"
   | "students"
   | "broadcast"
-  | "messages"
   | "livecc"
   | "settings";
 
