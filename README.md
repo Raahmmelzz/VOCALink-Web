@@ -7,7 +7,7 @@
 
 VocaLink is a capstone project built for **Special Needs Education (SNED)** classrooms. It is designed to empower nonverbal students to communicate seamlessly with their teachers through AAC (Augmentative and Alternative Communication) technology.
 
-The system provides an **AAC icon board**, **LSTM-based next-icon prediction**, **live closed captioning** powered by Whisper speech-to-text, **session management**, and **email-verified accounts**. It consists of three interconnected components: a React web application for teachers, an Expo React Native mobile application for nonverbal students, and a FastAPI backend server that serves both the core REST API and the ML prediction layer.
+The system provides an **AAC icon board**, **LSTM-based next-icon prediction**, **live closed captioning** powered by Whisper speech-to-text, and **session management**. It consists of three interconnected components: a React web application for teachers, an Expo React Native mobile application for nonverbal students, and a FastAPI backend server that serves both the core REST API and the ML prediction layer.
 
 ---
 
@@ -19,7 +19,6 @@ The system provides an **AAC icon board**, **LSTM-based next-icon prediction**, 
 - **Session Management** — Teacher starts and ends classroom sessions; the AAC board auto-locks/unlocks based on whether a session is active
 - **Text-to-Speech (TTS)** — Students can have their built AAC message spoken aloud via `expo-speech`
 - **Whisper Speech-to-Text** — Backend `/api/stt/` endpoint powered by the custom Whisper model (`rammealz123/VOCALink-Mobile-STT`) on HuggingFace
-- **Email Verification** — Secure account creation with 6-digit OTP sent via Brevo transactional email API
 - **Forgot Password** — 3-step OTP-based password reset flow (request → verify code → set new password)
 - **Student Management** — Teachers can assign students to their class and monitor their presence and activity
 - **Real-time Polling** — Dashboard and Live CC poll the backend every 3–4 seconds for live updates (replaces WebSocket which is unavailable on Render free tier)
@@ -227,8 +226,7 @@ The more the student uses the app, the more their personal history dominates —
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/api/auth/register/` | Register new account, sends 6-digit OTP via Brevo |
-| `POST` | `/api/auth/verify-email/` | Verify email with OTP code |
+| `POST` | `/api/auth/register/` | Register new account |
 | `POST` | `/api/auth/login/` | Login, returns JWT token |
 | `POST` | `/api/auth/forgot-password/` | Request OTP for password reset |
 | `POST` | `/api/auth/reset-password/` | Reset password with OTP |
@@ -380,7 +378,7 @@ Live URL: `https://raahmmelzz.github.io/VOCALink-Rammel/`
 
 | Feature | Description |
 |---|---|
-| ✅ Register & verify email | Sign up → 6-digit OTP via Brevo → activate account |
+| ✅ Register | Sign up and log in to your account |
 | ✅ Forgot password | Request OTP → verify → set new password (3-step flow) |
 | ✅ Dashboard | Overview: assigned students, online presence, recent AAC activity |
 | ✅ Start / end session | Toggle classroom session — students' boards auto-lock/unlock |
@@ -394,7 +392,7 @@ Live URL: `https://raahmmelzz.github.io/VOCALink-Rammel/`
 
 | Feature | Description |
 |---|---|
-| ✅ Register & verify email | Sign up → 6-digit OTP via Brevo → activate account |
+| ✅ Register | Sign up and log in to your account |
 | ✅ Home screen | Greeting with name, session status, quick-access AAC icons |
 | ✅ AAC Board | Tap 24 icons across 4 categories to build messages |
 | ✅ LSTM Smart Suggestions | ✨ Suggested Next [LSTM] bar — top 3 predicted next icons |
@@ -428,7 +426,6 @@ Live URL: `https://raahmmelzz.github.io/VOCALink-Rammel/`
 | **Teacher** | testteacher@vocalink.com | Test@1234 |
 | **Student** | teststudent@vocalink.com | Test@1234 |
 
-> Note: Email verification is required. If the test account is already verified, you can log in directly.
 
 ---
 

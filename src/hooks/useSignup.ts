@@ -40,18 +40,10 @@ export const useSignup = () => {
     }, 8000);
 
     try {
-      const result: any = await signup({ username, email, password, status: "TEACHER" });
+      await signup({ username, email, password, status: "TEACHER" });
       clearTimeout(slowTimer);
-
-      setSuccess(result?.email_sent
-        ? "Account created! Check your email for the verification code."
-        : "Account created! Redirecting to verify your email…"
-      );
-      setTimeout(() => {
-        const params = new URLSearchParams({ email });
-        if (result?.debug_code) params.set("code", result.debug_code);
-        navigate(`/verify-email?${params.toString()}`);
-      }, 1200);
+      setSuccess("Account created! You can now sign in.");
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err: any) {
       clearTimeout(slowTimer);
       setError(err?.message || "Signup failed. Please try again.");
