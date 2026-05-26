@@ -407,7 +407,43 @@ Live URL: `https://raahmmelzz.github.io/VOCALink-Rammel/`
 
 ---
 
-## 12. Known Limitations
+
+---
+
+## 12. Deployment Link
+
+| Platform | Link |
+|---|---|
+| **Web App (Teacher Dashboard)** | https://raahmmelzz.github.io/VOCALink-Rammel/ |
+| **Backend API** | https://vocalink-fastapi.onrender.com |
+| **API Docs (Swagger)** | https://vocalink-fastapi.onrender.com/docs |
+| **Mobile APK (Android)** | Available via EAS Build — APK | https://expo.dev/artifacts/eas/i1D6m1RRahzFqPCNgZhP1v.apk
+
+---
+
+## 13. Test Account
+
+| Role | Email | Password |
+|---|---|---|
+| **Teacher** | testteacher@vocalink.com | Test@1234 |
+| **Student** | teststudent@vocalink.com | Test@1234 |
+
+> Note: Email verification is required. If the test account is already verified, you can log in directly.
+
+---
+
+## 14. Team Members and Roles
+
+| Name | Role / Modules |
+|---|---|
+| Olaco, Mark Aidel Ray D. | Front End Developer |
+| Pacamo, Rammel | Back End Developer |
+| Pantilgan, Jon Marco F. | Database Administrator |
+| Rulona, Nick | Technical Writer |
+
+---
+
+## 15. Known Limitations
 
 - **Render free tier cold start** — server sleeps after 15 min of inactivity; first request takes ~30 seconds to wake up
 - **Web Speech API** — live captioning only works on Google Chrome or Microsoft Edge; not supported on Safari or Firefox
@@ -419,14 +455,40 @@ Live URL: `https://raahmmelzz.github.io/VOCALink-Rammel/`
 
 ---
 
-## 13. Team Members and Roles
+## 16. Screenshots
 
-| Name | Role / Modules |
-|---|---|
-| *Olaco, Mark Aidel Ray D. | *Front End Developer* |
-| *Pacamo, Rammel | *Back End Developer* |
-| *Pantilgan Jon Marco F.* | *Database Administrator* |
-| *Rulona, Nick* | *Technical Writer* |
+### Mobile App — Login
+![Mobile Login](screenshots/Loginpagemobile.jpg)
+
+### Mobile App — Home Screen (Class is Live)
+![Mobile Home](screenshots/Homepagemobile.jpg)
+
+### Mobile App — AAC Board
+![Mobile AAC Board](screenshots/AACboard.jpg)
+
+### Mobile App — Live Captions
+![Mobile Live CC](screenshots/Livecc.jpg)
+
+### Mobile App — Profile
+![Mobile Profile](screenshots/Profile.jpg)
+
+### Web App — Login
+![Web Login](screenshots/Loginweb.png)
+
+### Web App — Teacher Dashboard
+![Web Dashboard](screenshots/Dashboardweb.png)
+
+### Web App — Students
+![Web Students](screenshots/Studentboard.png)
+
+### Web App — STT Broadcast
+![Web Broadcast](screenshots/STTbroadcast.png)
+
+### Web App — Live CC Log
+![Web Live CC](screenshots/livecclogweb.png)
+
+### Web App — Settings
+![Web Settings](screenshots/Settings.png)
 
 ---
 
