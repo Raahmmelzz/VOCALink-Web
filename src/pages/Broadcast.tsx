@@ -1,27 +1,24 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Colors as C, FontSize, Radius } from "../styles/tokens";
-import {} from "../components/ui";
 import Icon from "../components/ui/Icon";
 import api from "../services/api";
 
-const SpeechRecognition =
+const SpeechRecognition: any =
   (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-const isChromium = !!(window as any).chrome;
 
 interface StudentActivity {
   id:           string;
-  type:         "reply" | "icon";
+  type:         "icon";
   time:         string;
   student_name: string;
   text:         string;
 }
 
+
 const Broadcast: React.FC = () => {
-  const [recording, setRecording] = useState(false);
-  const [liveText,  setLiveText]  = useState("");
-  const [error,     setError]     = useState("");
-  const [sttSupported]            = useState(!!SpeechRecognition);
+  const [recording,  setRecording]  = useState(false);
+  const [lastText,   setLastText]   = useState("");
+  const [error,        setError]        = useState("");
 
   const [sessionActive,   setSessionActive]   = useState(false);
   const [sessionCode,     setSessionCode]     = useState<string | null>(null);
@@ -31,14 +28,11 @@ const Broadcast: React.FC = () => {
   const [studentActivity, setStudentActivity] = useState<StudentActivity[]>([]);
   const [manualText,      setManualText]      = useState("");
 
-  const lastReplyIdRef  = useRef(0);
-  const lastIconIdRef   = useRef(0);
-  const activityRef     = useRef<HTMLDivElement>(null);
-
-  const recognitionRef       = useRef<any>(null);
-  const isRecordingRef       = useRef(false);
-  const currentTranscriptRef = useRef("");
-  const sessionActiveRef     = useRef(sessionActive);
+  const lastIconIdRef    = useRef(0);
+  const activityRef      = useRef<HTMLDivElement>(null);
+  const isRecordingRef   = useRef(false);
+  const recognitionRef   = useRef<any>(null);
+  const sessionActiveRef = useRef(sessionActive);
   useEffect(() => { sessionActiveRef.current = sessionActive; }, [sessionActive]);
 
   useEffect(() => {
@@ -51,43 +45,29 @@ const Broadcast: React.FC = () => {
   useEffect(() => {
     if (!sessionActive) {
       setStudentActivity([]);
-      lastReplyIdRef.current = 0;
-      lastIconIdRef.current  = 0;
+      lastIconIdRef.current = 0;
       return;
     }
-    const pollReplies = () => {
-      api.get(`/messages/my-students?since=${lastReplyIdRef.current}`)
+    const poll = () => {
+      api.get(`/sessions/logs/?since=${lastIconIdRef.current}`)
         .then(res => {
-          const msgs: any[] = res.data;
-          if (!msgs.length) return;
-          const entries: StudentActivity[] = msgs.map(m => ({
-            id: `reply-${m.id}`, type: "reply" as const,
-            time: m.sent_at || "", student_name: m.student_name || "Student", text: m.text,
+          const logs: any[] = res.data;
+          if (!logs.length) return;
+          const entries: StudentActivity[] = logs.map(l => ({
+            id:           `icon-${l.id}`,
+            type:         "icon" as const,
+            time:         l.tapped_at || "",
+            student_name: l.student_name || "Student",
+            text:         l.message || l.icon_label,
           }));
           setStudentActivity(prev =>
             [...prev, ...entries].sort((a, b) => a.time.localeCompare(b.time))
           );
-          lastReplyIdRef.current = msgs[msgs.length - 1].id;
+          lastIconIdRef.current = logs[logs.length - 1].id;
         }).catch(() => {});
     };
-    const pollIcons = () => {
-      api.get("/sessions/logs/")
-        .then(res => {
-          const newLogs: any[] = (res.data as any[]).filter(l => l.id > lastIconIdRef.current);
-          if (!newLogs.length) return;
-          const entries: StudentActivity[] = newLogs.map(l => ({
-            id: `icon-${l.id}`, type: "icon" as const,
-            time: l.tapped_at || "", student_name: l.student_name || "Student",
-            text: l.message || l.icon_label,
-          }));
-          setStudentActivity(prev =>
-            [...prev, ...entries].sort((a, b) => a.time.localeCompare(b.time))
-          );
-          lastIconIdRef.current = newLogs[newLogs.length - 1].id;
-        }).catch(() => {});
-    };
-    pollReplies(); pollIcons();
-    const iv = setInterval(() => { pollReplies(); pollIcons(); }, 2000);
+    poll();
+    const iv = setInterval(poll, 2000);
     return () => clearInterval(iv);
   }, [sessionActive]);
 
@@ -96,9 +76,64 @@ const Broadcast: React.FC = () => {
       activityRef.current.scrollTop = activityRef.current.scrollHeight;
   }, [studentActivity.length]);
 
-  useEffect(() => {
-    return () => { isRecordingRef.current = false; recognitionRef.current?.stop(); };
-  }, []);
+  useEffect(() => () => stopRecording(), []);
+
+  // ── Google Web Speech API (webkitSpeechRecognition) ──────────────────────
+  const startRecording = () => {
+    if (!sessionActiveRef.current) { setError("Start a session first."); return; }
+    if (!SpeechRecognition) { setError("Speech recognition requires Chrome or Edge."); return; }
+    setError("");
+    setLastText("");
+
+    const recog = new SpeechRecognition();
+    recog.continuous      = true;
+    recog.interimResults  = true;
+    recog.lang            = "en-US";
+
+    recog.onresult = async (e: any) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) {
+          const text = t.trim();
+          if (!text || !sessionActiveRef.current) continue;
+          try {
+            await api.post("/broadcast/", { text, speaker: "teacher" });
+            setLastText(text);
+            setSentLines(prev => [...prev.slice(-29), text]);
+            setError("");
+          } catch (err: any) {
+            setError(err?.response?.data?.detail || "Broadcast failed.");
+          }
+        } else {
+          interim += t;
+        }
+      }
+      if (interim) setLastText(interim);
+    };
+
+    recog.onerror = (e: any) => {
+      if (e.error !== "no-speech" && e.error !== "aborted")
+        setError(`Speech error: ${e.error}`);
+    };
+
+    recog.onend = () => {
+      if (isRecordingRef.current) recog.start();
+    };
+
+    recognitionRef.current   = recog;
+    isRecordingRef.current   = true;
+    setRecording(true);
+    recog.start();
+  };
+
+  const stopRecording = () => {
+    isRecordingRef.current = false;
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    setRecording(false);
+    setLastText("");
+  };
 
   const toggleSession = async () => {
     setTogglingSession(true);
@@ -110,73 +145,11 @@ const Broadcast: React.FC = () => {
       if (!nowActive) {
         setSentLines([]);
         setStudentActivity([]);
-        lastReplyIdRef.current = 0;
-        lastIconIdRef.current  = 0;
+        lastIconIdRef.current = 0;
         if (recording) stopRecording();
       }
     } catch {}
     setTogglingSession(false);
-  };
-
-  const startRecording = () => {
-    if (!SpeechRecognition) { setError("Requires Google Chrome or Edge."); return; }
-    if (!sessionActiveRef.current) { setError("Start a session first."); return; }
-    isRecordingRef.current       = true;
-    currentTranscriptRef.current = "";
-    setRecording(true);
-    setError("");
-
-    const recognition = new SpeechRecognition();
-    recognitionRef.current     = recognition;
-    recognition.continuous     = false;
-    recognition.interimResults = true;
-    recognition.lang           = "en-US";
-
-    recognition.onresult = (event: any) => {
-      let text = "";
-      for (let i = 0; i < event.results.length; i++)
-        text += event.results[i][0].transcript;
-      currentTranscriptRef.current = text;
-      setLiveText(text);
-    };
-
-    recognition.onerror = (event: any) => {
-      if (["no-speech", "network", "aborted"].includes(event.error)) return;
-      setError(`Mic error: ${event.error}`);
-      isRecordingRef.current = false;
-      setRecording(false);
-    };
-
-    recognition.onend = () => {
-      const text = currentTranscriptRef.current.trim();
-      currentTranscriptRef.current = "";
-      setLiveText("");
-      if (text && isRecordingRef.current) {
-        api.post("/broadcast/", { text, speaker: "teacher" })
-          .then(() => setSentLines(prev => [...prev.slice(-29), text]))
-          .catch(() => setError("Broadcast failed — is the session still active?"));
-      }
-      if (isRecordingRef.current) {
-        setTimeout(() => { try { recognition.start(); } catch {} }, 150);
-      } else {
-        setRecording(false);
-      }
-    };
-
-    try { recognition.start(); }
-    catch {
-      setError("Could not access microphone. Refresh and try again.");
-      isRecordingRef.current = false;
-      setRecording(false);
-    }
-  };
-
-  const stopRecording = () => {
-    isRecordingRef.current       = false;
-    currentTranscriptRef.current = "";
-    recognitionRef.current?.stop();
-    setLiveText("");
-    setRecording(false);
   };
 
   const handleManualSend = async () => {
@@ -193,16 +166,6 @@ const Broadcast: React.FC = () => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-
-      {!isChromium && (
-        <div style={{
-          padding: "10px 16px", borderRadius: Radius.md,
-          background: "#FEF3C7", border: "1px solid #FCD34D",
-          fontSize: FontSize.sm, color: "#92400E", fontWeight: 500,
-        }}>
-          ⚠️ <strong>Voice requires Chrome or Edge.</strong>
-        </div>
-      )}
 
       {/* ── Session bar ── */}
       <div style={{
@@ -239,13 +202,10 @@ const Broadcast: React.FC = () => {
       {/* ── Main two-column layout ── */}
       <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
 
-        {/* ── Left: narrow control strip ── */}
-        <div style={{
-          width: 220, flexShrink: 0,
-          display: "flex", flexDirection: "column", gap: 12,
-        }}>
+        {/* ── Left: control strip ── */}
+        <div style={{ width: 220, flexShrink: 0, display: "flex", flexDirection: "column", gap: 12 }}>
 
-          {/* Mic button — compact */}
+          {/* Mic button */}
           <div style={{
             display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
             padding: "20px 12px",
@@ -256,8 +216,8 @@ const Broadcast: React.FC = () => {
           }}>
             <button
               onClick={recording ? stopRecording : startRecording}
-              disabled={!sttSupported || (!sessionActive && !recording)}
-              title={recording ? "Mute" : "Unmute"}
+              disabled={!sessionActive && !recording}
+              title={recording ? "Stop" : "Go live"}
               style={{
                 width: 56, height: 56, borderRadius: "50%", border: "none",
                 background: recording
@@ -265,7 +225,7 @@ const Broadcast: React.FC = () => {
                   : sessionActive
                   ? `linear-gradient(135deg,${C.teal},${C.tealMid})`
                   : C.gray3,
-                cursor: sttSupported && (sessionActive || recording) ? "pointer" : "not-allowed",
+                cursor: sessionActive || recording ? "pointer" : "not-allowed",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 boxShadow: recording
                   ? "0 0 0 8px rgba(226,75,74,0.18),0 0 0 16px rgba(226,75,74,0.07)"
@@ -280,15 +240,23 @@ const Broadcast: React.FC = () => {
               fontSize: FontSize.xs, fontWeight: 700, textAlign: "center",
               color: recording ? "#fff" : sessionActive ? C.text2 : C.text3,
             }}>
-              {recording ? "🔴 Live" : sessionActive ? "Tap to go live" : "Start session first"}
+              {recording
+                ? "🔴 Recording"
+                : sessionActive ? "Tap to go live" : "Start session first"}
             </div>
 
-            {recording && liveText && (
+            {recording && lastText && (
               <div style={{
                 fontSize: 11, color: "rgba(255,255,255,0.65)",
                 fontStyle: "italic", textAlign: "center", lineHeight: 1.4,
               }}>
-                "{liveText}"
+                "{lastText}"
+              </div>
+            )}
+
+            {recording && (
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", textAlign: "center" }}>
+                Live via Google Speech Recognition
               </div>
             )}
           </div>
@@ -358,26 +326,24 @@ const Broadcast: React.FC = () => {
             </div>
           )}
 
-          {/* How it works */}
           {!sessionActive && !sentLines.length && (
             <div style={{ fontSize: 11, color: C.text3, lineHeight: 1.7 }}>
               1. Start a session<br />
               2. Tap the mic to go live<br />
-              3. Each sentence auto-broadcasts<br />
-              4. Tap again to mute<br /><br />
-              💡 Use <strong>Chrome</strong>.
+              3. Speech is recognised and broadcast live<br />
+              4. Tap again to stop<br /><br />
+              💡 Requires Chrome or Edge.
             </div>
           )}
         </div>
 
-        {/* ── Right: student responses — dominates the space ── */}
+        {/* ── Right: student responses ── */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
             background: C.white, borderRadius: Radius.md,
             border: `1px solid ${C.gray2}`, overflow: "hidden",
             minHeight: 520,
           }}>
-            {/* Header */}
             <div style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "16px 20px", borderBottom: `1px solid ${C.gray2}`,
@@ -387,7 +353,7 @@ const Broadcast: React.FC = () => {
                   Student Responses
                 </div>
                 <div style={{ fontSize: FontSize.xs, color: C.text3, marginTop: 2 }}>
-                  Typed replies and icon taps appear here in real time
+                  AAC icon taps appear here in real time
                 </div>
               </div>
               {sessionActive && (
@@ -401,7 +367,6 @@ const Broadcast: React.FC = () => {
               )}
             </div>
 
-            {/* Body */}
             {!sessionActive ? (
               <div style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
@@ -413,7 +378,7 @@ const Broadcast: React.FC = () => {
                   Start a session to see responses
                 </div>
                 <div style={{ fontSize: FontSize.sm }}>
-                  Students will send replies via icons and text once a session is active.
+                  Students send responses via AAC icons once a session is active.
                 </div>
               </div>
             ) : studentActivity.length === 0 ? (
@@ -427,7 +392,7 @@ const Broadcast: React.FC = () => {
                   Waiting for students…
                 </div>
                 <div style={{ fontSize: FontSize.sm }}>
-                  Responses appear here instantly when students tap icons or send messages.
+                  Responses appear here instantly when students tap icons.
                 </div>
               </div>
             ) : (
@@ -440,49 +405,35 @@ const Broadcast: React.FC = () => {
                     display: "flex", alignItems: "flex-start", gap: 14,
                     padding: "16px 20px",
                     borderBottom: idx < studentActivity.length - 1 ? `1px solid ${C.gray2}` : "none",
-                    background: item.type === "reply" ? C.purpleLight : C.white,
                   }}>
-                    {/* Avatar */}
                     <div style={{
                       width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
-                      background: item.type === "reply" ? C.purple : C.tealLight,
+                      background: C.tealLight,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       fontSize: 22,
                     }}>
-                      {item.type === "reply" ? "💬" : "🗣"}
+                      🗣
                     </div>
-
-                    {/* Content */}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{
-                        display: "flex", alignItems: "baseline", gap: 8, marginBottom: 5,
-                      }}>
-                        <span style={{
-                          fontSize: FontSize.base, fontWeight: 700,
-                          color: item.type === "reply" ? C.purple : C.teal,
-                        }}>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 5 }}>
+                        <span style={{ fontSize: FontSize.base, fontWeight: 700, color: C.teal }}>
                           {item.student_name}
                         </span>
                         <span style={{ fontSize: FontSize.xs, color: C.text3 }}>
                           {item.time.slice(11, 16)}
                         </span>
                         <span style={{
-                          marginLeft: "auto",
-                          fontSize: 11, fontWeight: 700, padding: "2px 8px",
-                          borderRadius: 999,
-                          background: item.type === "reply" ? C.purpleLight : C.tealLight,
-                          color: item.type === "reply" ? C.purple : C.teal,
-                          border: `1px solid ${item.type === "reply" ? C.purpleMid : C.tealBorder}`,
+                          marginLeft: "auto", fontSize: 11, fontWeight: 700,
+                          padding: "2px 8px", borderRadius: 999,
+                          background: C.tealLight, color: C.teal,
+                          border: `1px solid ${C.tealBorder}`,
                         }}>
-                          {item.type === "reply" ? "Reply" : "AAC"}
+                          AAC
                         </span>
                       </div>
                       <div style={{
-                        fontSize: FontSize.lg,
-                        fontWeight: 500,
-                        color: C.text,
-                        lineHeight: 1.45,
-                        wordBreak: "break-word",
+                        fontSize: FontSize.lg, fontWeight: 500,
+                        color: C.text, lineHeight: 1.45, wordBreak: "break-word",
                       }}>
                         {item.text}
                       </div>

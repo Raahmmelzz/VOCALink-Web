@@ -132,9 +132,7 @@ const Students: React.FC = () => {
         id: s.id,
         name: name,
         username: s.username,
-        status: "idle", // Defaulting to idle until WS statuses are saved to DB
-        lastMsg: "No recent messages",
-        time: "",
+        status: "idle",
         bg: av.bg,
         color: av.color,
     };
@@ -324,7 +322,6 @@ const Students: React.FC = () => {
                 <Divider style={{ margin: "8px 0" }} />
 
                 <div style={{ fontSize: FontSize.sm, color: C.text3 }}>@{s.username}</div>
-                <div style={{ fontSize: 12, color: C.text2, marginTop: 2 }}>{s.lastMsg}</div>
 
                 <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
                   <Button variant="outline" size="sm" style={{ flex: 1 }}>Edit</Button>

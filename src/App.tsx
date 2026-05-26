@@ -9,7 +9,6 @@ import Topbar         from "./components/layout/Topbar";
 import Dashboard      from "./pages/Dashboard";
 import Students       from "./pages/Students";
 import Broadcast      from "./pages/Broadcast";
-import Messages       from "./pages/Messages";
 import LiveCC         from "./pages/LiveCC";
 import Settings       from "./pages/Settings";
 import Login          from "./pages/auth/Login";
@@ -18,12 +17,11 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import VerifyEmail    from "./pages/auth/VerifyEmail";
 
 import { useAuth }       from "./context/AuthContext";
-import type { NavPage, Student } from "./types";
+import type { NavPage } from "./types";
 import api from "./services/api";
 
 const DashboardLayout: React.FC = () => {
   const [active, setActive]               = useState<NavPage>("dashboard");
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [teacherName,     setTeacherName]     = useState("");
   const [teacherInitials, setTeacherInitials] = useState("");
   const [teacherPhoto,    setTeacherPhoto]    = useState<string | null>(null);
@@ -51,10 +49,9 @@ const DashboardLayout: React.FC = () => {
 
   const renderPage = () => {
     switch (active) {
-      case "dashboard": return <Dashboard setActive={setActive} setSelectedStudent={setSelectedStudent} />;
+      case "dashboard": return <Dashboard setActive={setActive} />;
       case "students":  return <Students />;
       case "broadcast": return <Broadcast />;
-      case "messages":  return <Messages selected={selectedStudent} setSelected={setSelectedStudent} />;
       case "livecc":    return <LiveCC />;
       case "settings":  return (
         <Settings

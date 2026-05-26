@@ -142,7 +142,7 @@ const Settings: React.FC<SettingsProps> = ({ teacherPhoto, onNameChange, onPhoto
   const [confirmPw, setConfirmPw] = useState("");
 
   const [notifs, setNotifs] = useState({
-    urgentMessages: true, aacRequests: true, studentIdle: false,
+    aacRequests: true, studentIdle: false,
     broadcastReminder: true, sessionSummary: false,
     inApp: true, emailAlerts: true, smsAlerts: false, soundAlerts: true,
   });
@@ -343,8 +343,7 @@ const Settings: React.FC<SettingsProps> = ({ teacherPhoto, onNameChange, onPhoto
           <Card style={{ flex: 1 }}>
             <CardTitle>Notification preferences</CardTitle>
             <p style={{ fontSize: FontSize.sm, color: C.text3, marginBottom: 4, lineHeight: 1.5 }}>Choose how you want to be alerted during sessions</p>
-            <SectionLabel>Student messages</SectionLabel>
-            <ToggleRow label="Urgent messages"      sub="Get alerted immediately for urgent student flags" value={notifs.urgentMessages}    onChange={() => toggleNotif("urgentMessages")} />
+            <SectionLabel>Student activity</SectionLabel>
             <ToggleRow label="New AAC requests"     sub="Notify when a student sends a new request"        value={notifs.aacRequests}       onChange={() => toggleNotif("aacRequests")} />
             <ToggleRow label="Student goes idle"    sub="Alert when a student hasn't responded in 10 min"  value={notifs.studentIdle}       onChange={() => toggleNotif("studentIdle")} />
             <SectionLabel>System</SectionLabel>

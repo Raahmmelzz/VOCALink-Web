@@ -12,7 +12,7 @@ interface SessionMeta {
 
 interface LogEntry {
   id: string;
-  type: "cc" | "aac" | "reply";
+  type: "cc" | "aac";
   sort_key: string;
   time: string;
   speaker: string;
@@ -175,17 +175,10 @@ const LiveCC: React.FC = () => {
           style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 460, overflowY: "auto", paddingRight: 4 }}
         >
           {sessionLog.entries.map(entry => {
-            const bgColor =
-              entry.type === "cc"    ? C.tealLight   :
-              entry.type === "reply" ? C.purpleLight  : C.gray;
-            const borderColor =
-              entry.type === "cc"    ? C.tealBorder :
-              entry.type === "reply" ? C.gray2       : C.gray2;
-            const speakerColor =
-              entry.type === "cc"    ? C.teal   :
-              entry.type === "reply" ? C.purple  : C.text2;
-            const textColor =
-              entry.type === "cc" ? "#085041" : C.text;
+            const bgColor      = entry.type === "cc" ? C.tealLight  : C.gray;
+            const borderColor  = entry.type === "cc" ? C.tealBorder : C.gray2;
+            const speakerColor = entry.type === "cc" ? C.teal       : C.text2;
+            const textColor    = entry.type === "cc" ? "#085041"    : C.text;
 
             return (
               <div
@@ -210,19 +203,17 @@ const LiveCC: React.FC = () => {
                     fontSize: FontSize.sm, fontWeight: 600,
                     color: speakerColor, marginBottom: 3,
                   }}>
-                    {entry.type === "aac"   && <span style={{ marginRight: 4 }}>🗣</span>}
-                    {entry.type === "reply" && <span style={{ marginRight: 4 }}>💬</span>}
+                    {entry.type === "aac" && <span style={{ marginRight: 4 }}>🗣</span>}
                     {entry.speaker}
                   </div>
-                  <div style={{ fontSize: entry.type === "reply" ? 15 : 13, lineHeight: 1.55, color: textColor }}>
+                  <div style={{ fontSize: 13, lineHeight: 1.55, color: textColor }}>
                     {entry.text}
                   </div>
                 </div>
 
                 {/* Badge */}
-                {entry.type === "cc"    && <Badge color="teal">CC</Badge>}
-                {entry.type === "aac"   && <Badge color="purple">AAC</Badge>}
-                {entry.type === "reply" && <Badge color="purple">Reply</Badge>}
+                {entry.type === "cc"  && <Badge color="teal">CC</Badge>}
+                {entry.type === "aac" && <Badge color="purple">AAC</Badge>}
               </div>
             );
           })}
