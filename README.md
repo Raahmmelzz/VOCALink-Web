@@ -412,10 +412,10 @@ Live URL: `https://raahmmelzz.github.io/VOCALink-Rammel/`
 
 | Platform | Link |
 |---|---|
-| **Web App (Teacher Dashboard)** | https://raahmmelzz.github.io/VOCALink-Rammel/ |
+| **Web App (Teacher Dashboard)** | https://voca-link-web-zpp9.vercel.app/#/login/ |
 | **Backend API** | https://vocalink-fastapi.onrender.com |
 | **API Docs (Swagger)** | https://vocalink-fastapi.onrender.com/docs |
-| **Mobile APK (Android)** | Available via EAS Build — APK | https://expo.dev/artifacts/eas/i1D6m1RRahzFqPCNgZhP1v.apk
+| **Mobile APK (Android)** | Available via EAS Build — APK | https://expo.dev/artifacts/eas/2diUq2kyeztmZCxsX9KEGB.apk
 
 ---
 
@@ -423,8 +423,8 @@ Live URL: `https://raahmmelzz.github.io/VOCALink-Rammel/`
 
 | Role | Email | Password |
 |---|---|---|
-| **Teacher** | testteacher@vocalink.com | Test@1234 |
-| **Student** | teststudent@vocalink.com | Test@1234 |
+| **Teacher** | lacsylore12@gmail.com | lacsy12345 |
+| **Student** | lacsyqtie@gmail.com | Lacsy12345 |
 
 
 ---

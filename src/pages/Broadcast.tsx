@@ -22,6 +22,13 @@ const Broadcast: React.FC = () => {
   const [liveText,  setLiveText]  = useState("");
   const [error,     setError]     = useState("");
   const [sttSupported]            = useState(!!SpeechRecognition);
+  const [isMobile,  setIsMobile]  = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const [sessionActive,   setSessionActive]   = useState(false);
   const [sessionCode,     setSessionCode]     = useState<string | null>(null);
@@ -237,11 +244,11 @@ const Broadcast: React.FC = () => {
       </div>
 
       {/* ── Main two-column layout ── */}
-      <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 14, alignItems: "flex-start" }}>
 
         {/* ── Left: narrow control strip ── */}
         <div style={{
-          width: 220, flexShrink: 0,
+          width: isMobile ? "100%" : 220, flexShrink: 0,
           display: "flex", flexDirection: "column", gap: 12,
         }}>
 
