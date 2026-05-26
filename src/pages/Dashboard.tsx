@@ -260,7 +260,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActive }) => {
             {students.map((s, i) => (
               <div
                 key={s.id}
-                onClick={() => {}}
+                onClick={() => { setActive("students"); }}
                 style={{
                   display: "flex", alignItems: "center", gap: 14,
                   padding: "12px 20px", cursor: "pointer",

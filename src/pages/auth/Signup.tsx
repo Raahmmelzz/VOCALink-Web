@@ -53,7 +53,7 @@ export default function Signup() {
               required
             />
 
-            <label className="label">Email <span style={{ fontWeight: 400, color: "#94A3B8", fontSize: 11 }}>— must be real, a verification code will be sent</span></label>
+            <label className="label">Email</label>
             <input
               className="input"
               type="email"

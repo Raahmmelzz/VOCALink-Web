@@ -75,8 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
         const detail = errData.detail || "";
-        if (detail === "EMAIL_NOT_VERIFIED") throw new Error("EMAIL_NOT_VERIFIED");
-        if (detail.includes("credentials") || response.status === 401) throw new Error("Invalid email or password. Please try again.");
+        if (response.status === 401) throw new Error("Invalid email or password. Please try again.");
         throw new Error(detail || "Login failed. Please try again.");
       }
 
