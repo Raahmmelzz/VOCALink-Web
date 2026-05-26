@@ -14,7 +14,6 @@ import Settings       from "./pages/Settings";
 import Login          from "./pages/auth/Login";
 import Signup         from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
-import VerifyEmail    from "./pages/auth/VerifyEmail";
 
 import { useAuth }       from "./context/AuthContext";
 import type { NavPage } from "./types";
@@ -92,7 +91,6 @@ const App: React.FC = () => {
       <Route path="/login"           element={!user ? <Login />          : <Navigate to="/dashboard" />} />
       <Route path="/signup"          element={!user ? <Signup />         : <Navigate to="/dashboard" />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/verify-email"    element={<VerifyEmail />} />
       <Route path="/dashboard/*"     element={user  ? <DashboardLayout /> : <Navigate to="/login" />} />
       <Route path="*"                element={<Navigate to={user ? "/dashboard" : "/login"} />} />
     </Routes>
