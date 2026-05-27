@@ -360,14 +360,9 @@ Scan the QR code with **Expo Go** on your phone. Make sure your phone and laptop
 - **Database:** PostgreSQL on Render (free tier, 1GB)
 - **Cold start note:** Free tier spins down after 15 min of inactivity. First request after sleep may take ~30 seconds.
 
-### Web App — GitHub Pages
-```bash
-npm run deploy
-```
-Live URL: `https://raahmmelzz.github.io/VOCALink-Rammel/`
+### Web App — Vercel
 
 ### Mobile App — Expo Go
-- Development / defense: `npx expo start` → scan QR with Expo Go
 - Production build: `eas build` (requires Expo account)
 
 ---
